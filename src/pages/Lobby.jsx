@@ -213,7 +213,7 @@ const Lobby = () => {
     return (
       <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-12 px-4 font-sans text-white overflow-x-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-600/20 blur-[120px] rounded-full" />
+          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-blue-600/20 blur-[120px] rounded-full" />
           <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
         </div>
 
@@ -223,12 +223,12 @@ const Lobby = () => {
           className="relative z-10 w-full max-md bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-2xl"
         >
           <div className="bg-[#0c0c0c] rounded-[2.2rem] p-8 border border-white/5 flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-orange-600/10 border border-orange-500/20 rounded-2xl flex items-center justify-center text-orange-500 mb-6 shadow-2xl">
+            <div className="w-16 h-16 bg-blue-600/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-yellow-500 mb-6 shadow-2xl">
                <Gavel size={32} strokeWidth={2.5} />
             </div>
 
             <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Joining Arena</h2>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-8">Room ID: <span className="text-orange-500">{id}</span></p>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-8">Room ID: <span className="text-yellow-500">{id}</span></p>
 
             {!isGuestMode ? (
               <div className="w-full space-y-4">
@@ -271,7 +271,7 @@ const Lobby = () => {
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="e.g. THALA"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white font-black uppercase text-sm tracking-[0.2em] placeholder:text-gray-800 focus:outline-none focus:border-orange-500/50 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white font-black uppercase text-sm tracking-[0.2em] placeholder:text-gray-800 focus:outline-none focus:border-yellow-500/50 transition-all"
                     autoFocus
                   />
                 </div>
@@ -279,7 +279,7 @@ const Lobby = () => {
                 <button
                   type="submit"
                   disabled={isUpdatingSettings || !guestName.trim()}
-                  className="w-full h-14 bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest text-xs shadow-[0_10px_30px_rgba(255,85,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+                  className="w-full h-14 bg-gradient-to-r from-yellow-600 to-yellow-500 rounded-xl flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest text-xs shadow-[0_10px_30px_rgba(59,130,246,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
                 >
                   {isUpdatingSettings ? <Loader2 size={18} className="animate-spin" /> : <span>Step into Hub</span>}
                 </button>
@@ -308,7 +308,7 @@ const Lobby = () => {
     return (
       <div className="relative min-h-screen bg-[#050505] flex flex-col items-center py-12 px-4 font-sans text-white overflow-x-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-600/20 blur-[120px] rounded-full" />
+          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-blue-600/20 blur-[120px] rounded-full" />
           <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
         </div>
 
@@ -337,7 +337,7 @@ const Lobby = () => {
                   }`}
                 >
                   <div className="w-20 h-20 bg-white/5 border border-white/5 rounded-2xl p-2 flex items-center justify-center">
-                    {isSelectingTeam === team.id ? <Loader2 className="animate-spin text-orange-500" /> : <img src={team.logo} alt="" className="w-full h-full object-contain" />}
+                    {isSelectingTeam === team.id ? <Loader2 className="animate-spin text-yellow-500" /> : <img src={team.logo} alt="" className="w-full h-full object-contain" />}
                   </div>
                   <div className="text-center">
                     <p className="text-[10px] font-black uppercase tracking-widest text-white">{team.id}</p>
@@ -365,7 +365,7 @@ const Lobby = () => {
       
       {/* Premium Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
       </div>
@@ -400,7 +400,7 @@ const Lobby = () => {
             <button
               onClick={handleStartAuction}
               disabled={isStarting}
-              className="relative overflow-hidden group px-8 py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer"
+              className="relative overflow-hidden group px-8 py-3 bg-gradient-to-r from-blue-600 to-sky-500 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer"
             >
           <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               <div className="relative flex items-center gap-2">
@@ -419,8 +419,8 @@ const Lobby = () => {
         className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
       >
         {/* Subtle Glow behind panel */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
-        <div className="absolute -inset-2 bg-gradient-to-r from-[#ff5500]/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-600/[0.02] via-[#efb100]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
+        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
         
         <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
           
@@ -452,13 +452,13 @@ const Lobby = () => {
                 </div>
                 <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
                   <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Squad Capacity</span>
-                  <span className="text-[11px] font-black text-blue-400 uppercase tracking-tight">
+                  <span className="text-[11px] font-black text-yellow-500 uppercase tracking-tight">
                     {currentAuction?.squadLimit || 25} Players
                   </span>
                 </div>
                 <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
                   <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Overseas Quota</span>
-                  <span className="text-[11px] font-black text-purple-400 uppercase tracking-tight">
+                  <span className="text-[11px] font-black text-blue-400 uppercase tracking-tight">
                     Max {currentAuction?.overseasLimit || 8}
                   </span>
                 </div>
@@ -557,7 +557,7 @@ const Lobby = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 py-3 flex flex-col items-center justify-center gap-1.5 transition-all rounded-xl cursor-pointer ${activeTab === tab.id
-                      ? 'bg-white/5 text-[#ff5500] border border-white/10 shadow-inner'
+                      ? 'bg-white/5 text-yellow-500 border border-white/10 shadow-inner'
                       : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.01]'
                     }`}
                 >
@@ -685,7 +685,7 @@ const Lobby = () => {
                             <ShieldAlert size={20} />
                          </div>
                          <div>
-                            <p className="text-[9px] text-blue-400 font-black uppercase tracking-widest mb-1">Restricted Control</p>
+                            <p className="text-[9px] text-yellow-500 font-black uppercase tracking-widest mb-1">Restricted Control</p>
                             <p className="text-[10px] text-blue-200/50 font-medium">Only the Hub Host can calibrate auction engine parameters.</p>
                          </div>
                       </div>

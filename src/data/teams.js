@@ -51,7 +51,7 @@ export const TEAMS = [
   { 
     id: 'SRH', 
     name: 'Sunrisers Hyderabad', 
-    color: 'bg-orange-500', 
+    color: 'bg-yellow-500', 
     textColor: 'text-white',
     logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/51/Sunrisers_Hyderabad_Logo.svg/1280px-Sunrisers_Hyderabad_Logo.svg.png'
   },

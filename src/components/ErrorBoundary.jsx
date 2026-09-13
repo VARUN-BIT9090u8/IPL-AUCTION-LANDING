@@ -29,7 +29,7 @@ class ErrorBoundary extends React.Component {
         <div className="min-h-screen flex items-center justify-center bg-black text-white p-6 relative overflow-hidden">
           {/* Animated Background Orbs */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/10 blur-[120px] rounded-full animate-pulse-slow pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-600/10 blur-[120px] rounded-full animate-pulse-slow pointer-events-none" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full animate-pulse-slow pointer-events-none" style={{ animationDelay: '2s' }} />
 
           <div className="max-w-md w-full glass-premium border-red-500/20 rounded-[2.5rem] p-10 text-center relative z-10">
             <div className="w-24 h-24 bg-red-500/10 border border-red-500/20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-red-500/20">
@@ -49,7 +49,7 @@ class ErrorBoundary extends React.Component {
             <div className="flex flex-col gap-4">
               <button
                 onClick={() => window.location.reload()}
-                className="w-full py-5 px-8 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-red-600/20"
+                className="w-full py-5 px-8 bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-500 hover:to-yellow-500 rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-red-600/20"
               >
                 Re-Ignite Engine
               </button>

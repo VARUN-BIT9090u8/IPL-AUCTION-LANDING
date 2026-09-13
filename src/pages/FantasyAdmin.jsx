@@ -151,7 +151,7 @@ const FantasyAdmin = () => {
   return (
     <div className="min-h-screen bg-[#050505] text-white p-6 md:p-12 relative overflow-hidden font-sans">
       {/* Background Glow */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-600/10 blur-[150px] rounded-full pointer-events-none animate-pulse" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none animate-pulse" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
 
       <div className="max-w-5xl mx-auto space-y-12 relative z-10">
@@ -159,11 +159,11 @@ const FantasyAdmin = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-white/5 pb-12">
           <div>
             <div className="flex items-center gap-4 mb-4">
-               <div className="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(234,88,12,0.4)]">
+               <div className="w-12 h-12 bg-yellow-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(234,88,12,0.4)]">
                   <Trophy size={24} className="text-white" />
                </div>
                <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic leading-none">
-                 Fantasy <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-800">Admin Portal</span>
+                 Fantasy <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-yellow-800">Admin Portal</span>
                </h1>
             </div>
             <p className="text-gray-500 text-xs font-black uppercase tracking-[0.4em] ml-1">Automated Average Point Calculator</p>
@@ -192,13 +192,13 @@ const FantasyAdmin = () => {
 
         {/* Search Section */}
         <div className="relative group">
-          <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-700 transition-colors group-focus-within:text-orange-500" size={24} />
+          <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-700 transition-colors group-focus-within:text-yellow-500" size={24} />
           <input 
             type="text"
             placeholder="TYPE PLAYER NAME TO FIND..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-[3rem] py-8 pl-20 pr-8 text-2xl font-black uppercase tracking-tighter transition-all focus:border-orange-500/50 focus:bg-white/[0.08] outline-none placeholder:text-gray-800 italic"
+            className="w-full bg-white/5 border border-white/10 rounded-[3rem] py-8 pl-20 pr-8 text-2xl font-black uppercase tracking-tighter transition-all focus:border-yellow-500/50 focus:bg-white/[0.08] outline-none placeholder:text-gray-800 italic"
           />
         </div>
 
@@ -211,7 +211,7 @@ const FantasyAdmin = () => {
                  initial={{ opacity: 0, x: -20 }}
                  animate={{ opacity: 1, x: 0 }}
                  transition={{ delay: idx * 0.05 }}
-                 className="bg-[#0a0a0a] border border-white/5 p-8 rounded-[3rem] flex flex-col lg:flex-row lg:items-center justify-between gap-10 hover:border-orange-500/20 transition-all group sticky top-0 md:relative"
+                 className="bg-[#0a0a0a] border border-white/5 p-8 rounded-[3rem] flex flex-col lg:flex-row lg:items-center justify-between gap-10 hover:border-blue-500/20 transition-all group sticky top-0 md:relative"
                >
                  {/* Player Info */}
                  <div className="flex items-center gap-8 min-w-[300px]">
@@ -223,15 +223,15 @@ const FantasyAdmin = () => {
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <div className="absolute -inset-2 bg-orange-600/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute -inset-2 bg-blue-600/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                    </div>
                    <div>
-                     <h3 className="text-3xl font-black uppercase tracking-tight italic mb-1 group-hover:text-orange-500 transition-colors">
+                     <h3 className="text-3xl font-black uppercase tracking-tight italic mb-1 group-hover:text-yellow-500 transition-colors">
                        {p.name}
                      </h3>
                      <div className="flex gap-4">
                         <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{p.role}</span>
-                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest border-l border-white/10 pl-4">{p.set}</span>
+                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest border-l border-white/10 pl-4">{p.set}</span>
                      </div>
                    </div>
                  </div>
@@ -242,7 +242,7 @@ const FantasyAdmin = () => {
                     <div className="bg-white/[0.03] p-6 rounded-[2rem] text-center border border-white/5">
                        <span className="block text-[8px] font-black text-gray-600 uppercase tracking-widest mb-3">CURRENT AVERAGE</span>
                        <div 
-                         className="text-4xl font-black text-white italic cursor-pointer hover:text-orange-500 transition-colors"
+                         className="text-4xl font-black text-white italic cursor-pointer hover:text-yellow-500 transition-colors"
                          onClick={() => {
                            const val = prompt('Set manual average:', playerAverages[p.id]);
                            if(val) setManualAverage(p.id, val);
@@ -256,7 +256,7 @@ const FantasyAdmin = () => {
                     <div className="bg-white/[0.03] p-6 rounded-[2rem] text-center border border-white/5">
                        <span className="block text-[8px] font-black text-gray-600 uppercase tracking-widest mb-3">MATCHES PLAYED</span>
                        <div 
-                         className="text-4xl font-black text-blue-500 italic cursor-pointer hover:text-blue-400 transition-colors"
+                         className="text-4xl font-black text-blue-500 italic cursor-pointer hover:text-yellow-500 transition-colors"
                           onClick={() => {
                            const val = prompt('Set manual match count:', playerMatches[p.id]);
                            if(val) setManualMatches(p.id, val);
@@ -276,7 +276,7 @@ const FantasyAdmin = () => {
                              handleNewMatchPoint(p.id, Number(pts));
                            }
                          }}
-                         className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-800 text-white p-5 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all active:scale-95 shadow-[0_10px_40px_rgba(234,88,12,0.2)]"
+                         className="w-full bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-800 text-white p-5 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all active:scale-95 shadow-[0_10px_40px_rgba(234,88,12,0.2)]"
                        >
                          {isUpdating ? 'CALCULATING...' : (<><Plus size={20} /> <span className="font-black text-xs uppercase tracking-widest">Add Today's Points</span></>)}
                        </button>

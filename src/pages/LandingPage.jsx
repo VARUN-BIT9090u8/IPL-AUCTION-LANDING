@@ -281,14 +281,14 @@ const LandingPage = () => {
         <BuyMeACoffee />
 
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
+          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full" />
           <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
         </div>
 
         <motion.div
           variants={itemVariants}
-          className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
+          className="relative z-10 flex items-center gap-2 border border-blue-500/30 bg-blue-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
         >
           🏏 LIVE IPL AUCTION
         </motion.div>
@@ -301,7 +301,7 @@ const LandingPage = () => {
           <div className="text-3xl sm:text-4xl md:text-5xl lg:text-[64px] font-extrabold tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
             CREATE YOUR
           </div>
-          <div className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black tracking-tighter text-[#ff5500] leading-none uppercase mt-1 italic drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
+          <div className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black tracking-tighter text-[blue] leading-none uppercase mt-1 italic drop-shadow-[0_4px_12px_rgba(59,130,246,0.2)]">
             AUCTION ROOM
           </div>
 
@@ -311,11 +311,11 @@ const LandingPage = () => {
 
           {/* Three-step visual story */}
           <div className="flex items-center justify-center gap-3 sm:gap-6 mt-5 text-[9px] font-black tracking-widest text-gray-600 uppercase select-none">
-            <span className="hover:text-orange-500/80 transition-colors">① Create Room</span>
+            <span className="hover:text-yellow-500/80 transition-colors">① Create Room</span>
             <span className="text-gray-800">➔</span>
-            <span className="hover:text-orange-500/80 transition-colors">② Invite Friends</span>
+            <span className="hover:text-yellow-500/80 transition-colors">② Invite Friends</span>
             <span className="text-gray-800">➔</span>
-            <span className="hover:text-orange-500/80 transition-colors">③ Start Bidding</span>
+            <span className="hover:text-yellow-500/80 transition-colors">③ Start Bidding</span>
           </div>
         </motion.div>
 
@@ -330,8 +330,8 @@ const LandingPage = () => {
           className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
         >
           {/* Subtle Orange Glow behind panel */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
-          <div className="absolute -inset-2 bg-gradient-to-r from-[#ff5500]/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-600/[0.02] via-[#efb100]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
+          <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
           <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
             {/* Left Side: Live Activity Feed */}
             <div className="lg:col-span-7 w-full flex flex-col p-6 md:p-8 relative">
@@ -351,9 +351,9 @@ const LandingPage = () => {
                 <div className="w-full space-y-4">
                   <button
                     onClick={handleGoogleSignIn}
-                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] cursor-pointer transition-all active:scale-[0.98]"
+                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(59,130,246,0.2)] cursor-pointer transition-all active:scale-[0.98]"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-sky-500 transition-transform duration-500 group-hover/submit:scale-105" />
                     <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
                       <svg viewBox="0 0 24 24" width="18" height="18" className="fill-white">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -386,7 +386,7 @@ const LandingPage = () => {
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="e.g. MS Dhoni"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white font-black uppercase text-sm tracking-widest placeholder:text-gray-800 focus:outline-none focus:border-orange-500/50 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white font-black uppercase text-sm tracking-widest placeholder:text-gray-800 focus:outline-none focus:border-yellow-500/50 transition-all"
                       autoFocus
                     />
                   </div>
@@ -394,9 +394,9 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] cursor-pointer transition-all active:scale-[0.98]"
+                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(59,130,246,0.2)] cursor-pointer transition-all active:scale-[0.98]"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-sky-500 transition-transform duration-500 group-hover/submit:scale-105" />
                     <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
                       {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <span>Start Auction Hub</span>}
                       {!isSubmitting && <ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" />}
@@ -449,7 +449,7 @@ const LandingPage = () => {
       <BuyMeACoffee />
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
       </div>
@@ -457,7 +457,7 @@ const LandingPage = () => {
       {/* Top Badge */}
       <motion.div
         variants={itemVariants}
-        className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
+        className="relative z-10 flex items-center gap-2 border border-blue-500/30 bg-blue-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
       >
         🏏 LIVE IPL AUCTION
       </motion.div>
@@ -471,7 +471,7 @@ const LandingPage = () => {
         <div className="text-3xl sm:text-4xl md:text-5xl lg:text-[64px] font-extrabold tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
           CREATE YOUR
         </div>
-        <div className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black tracking-tighter text-[#ff5500] leading-none uppercase mt-1 italic drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
+        <div className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black tracking-tighter text-yellow-500 leading-none uppercase mt-1 italic drop-shadow-[0_4px_12px_rgba(59,130,246,0.2)]">
           AUCTION ROOM
         </div>
 
@@ -482,11 +482,11 @@ const LandingPage = () => {
 
         {/* Three-step visual story */}
         <div className="flex items-center justify-center gap-3 sm:gap-6 mt-5 text-[9px] font-black tracking-widest text-gray-600 uppercase select-none">
-          <span className="hover:text-orange-500/80 transition-colors">① Create Room</span>
+          <span className="hover:text-yellow-500/80 transition-colors">① Create Room</span>
           <span className="text-gray-800">➔</span>
-          <span className="hover:text-orange-500/80 transition-colors">② Invite Friends</span>
+          <span className="hover:text-yellow-500/80 transition-colors">② Invite Friends</span>
           <span className="text-gray-800">➔</span>
-          <span className="hover:text-orange-500/80 transition-colors">③ Start Bidding</span>
+          <span className="hover:text-yellow-500/80 transition-colors">③ Start Bidding</span>
         </div>
       </motion.div>
 
@@ -501,8 +501,8 @@ const LandingPage = () => {
         className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
       >
         {/* Subtle Orange Glow behind panel */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
-        <div className="absolute -inset-2 bg-gradient-to-r from-[#ff5500]/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-600/[0.02] via-[#efb100]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
+        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
         <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
           {/* Left Side: Live signings */}
           <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative">
@@ -519,7 +519,7 @@ const LandingPage = () => {
                   type="button"
                   onClick={() => setActiveTab('new')}
                   className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${activeTab === 'new'
-                    ? 'border-[#ff5500] text-[#ff5500]'
+                    ? 'border-[#efb100] text-yellow-500'
                     : 'border-transparent text-gray-500 hover:text-gray-300'
                     }`}
                 >
@@ -529,7 +529,7 @@ const LandingPage = () => {
                   type="button"
                   onClick={() => setActiveTab('join')}
                   className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${activeTab === 'join'
-                    ? 'border-[#ff5500] text-[#ff5500]'
+                    ? 'border-[#efb100] text-yellow-500'
                     : 'border-transparent text-gray-500 hover:text-gray-300'
                     }`}
                 >
@@ -539,7 +539,7 @@ const LandingPage = () => {
                   type="button"
                   onClick={() => setActiveTab('history')}
                   className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${activeTab === 'history'
-                    ? 'border-[#ff5500] text-[#ff5500]'
+                    ? 'border-[#efb100] text-yellow-500'
                     : 'border-transparent text-gray-500 hover:text-gray-300'
                     }`}
                 >
@@ -681,9 +681,9 @@ const LandingPage = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full h-12 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
+                      className="w-full h-12 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(59,130,246,0.2)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-sky-500 transition-transform duration-500 group-hover/submit:scale-105" />
                       <div className="relative flex items-center justify-center gap-2 text-white font-black uppercase tracking-[0.2em] text-xs">
                         {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><span>Start Auction</span><ChevronRight size={16} className="group-hover/submit:translate-x-1 transition-transform" /></>}
                       </div>
@@ -708,7 +708,7 @@ const LandingPage = () => {
                       type="text"
                       value={roomCode}
                       onChange={(e) => setRoomCode(e.target.value)}
-                      className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.5em] text-center text-lg placeholder:tracking-normal placeholder:text-xs placeholder:text-gray-700"
+                      className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:border-yellow-500/50 transition-all text-white font-black uppercase tracking-[0.5em] text-center text-lg placeholder:tracking-normal placeholder:text-xs placeholder:text-gray-700"
                       placeholder="Enter Room Code"
                       required
                     />
@@ -717,9 +717,9 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer"
+                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(59,130,246,0.2)] disabled:opacity-50 cursor-pointer"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-sky-500 transition-transform duration-500 group-hover/submit:scale-105" />
                     <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
                       {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><KeyRound size={16} /><span>Enter Portal</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
                     </div>
@@ -773,7 +773,7 @@ const LandingPage = () => {
                                     <h5 className="text-sm font-black uppercase tracking-tight">{teamMeta?.name || session.teamName}</h5>
                                     <div className="flex items-center gap-2 mt-0.5">
                                       <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Room: {session.roomId}</span>
-                                      <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${session.mode === 'mega' ? 'bg-orange-500/10 text-orange-500'
+                                      <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${session.mode === 'mega' ? 'bg-blue-500/10 text-yellow-500'
                                         : session.mode === 'sprint11' ? 'bg-yellow-500/10 text-yellow-500'
                                           : 'bg-blue-500/10 text-blue-500'
                                         }`}>
@@ -810,7 +810,7 @@ const LandingPage = () => {
                                       {/* Quick Stats */}
                                       <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-tight px-2">
                                         <span className="text-gray-500">Budget Left: <span className="text-green-500">₹{session.budgetRemaining?.toFixed(1)} Cr</span></span>
-                                        <span className="text-gray-500">Overseas: <span className="text-purple-400">{overseasCount}/8</span></span>
+                                        <span className="text-gray-500">Overseas: <span className="text-blue-400">{overseasCount}/8</span></span>
                                         <span className="text-gray-500">Squad: <span className="text-white">{session.squad.length}/25</span></span>
                                       </div>
 
@@ -835,7 +835,7 @@ const LandingPage = () => {
                                                       <h6 className="text-[10px] font-black leading-tight">{p?.name}</h6>
                                                       <div className="flex items-center gap-1.5">
                                                         <span className="text-[7px] font-bold text-gray-500 uppercase">{p?.type}</span>
-                                                        {p?.country !== 'IND' && <Wifi size={8} className="text-purple-400 rotate-90" />}
+                                                        {p?.country !== 'IND' && <Wifi size={8} className="text-blue-400 rotate-90" />}
                                                       </div>
                                                     </div>
                                                   </div>

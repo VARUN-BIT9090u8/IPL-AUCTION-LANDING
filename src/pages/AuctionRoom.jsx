@@ -6,6 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
+
 import {
    Wallet,
    History,
@@ -87,7 +88,8 @@ const AuctionRoom = () => {
    const [optimisticState, setOptimisticState] = useState(null);
    const [joiningTeam, setJoiningTeam] = useState(null);
    const [banError, setBanError] = useState(null);
-
+   const [showCustomBid, setShowCustomBid] = useState(false);
+   const [customBid, setCustomBid] = useState(0);
    // Clear optimistic state when DB catches up
    useEffect(() => {
       if (optimisticState && currentAuction?.currentAuction?.currentBid >= optimisticState.currentBid) {
@@ -334,7 +336,19 @@ const AuctionRoom = () => {
    const isAdmin = currentAuction?.hostId === user?.uid;
    const currentBid = displayAuctionState?.currentBid || 0;
    const increment = currentBid < 5 ? 0.20 : 0.25;
-   const nextBidAmount = currentBid === 0 ? (currentPlayer?.basePrice || 0) : currentBid + increment;
+   const nextBidAmount =
+      currentBid === 0
+         ? (currentPlayer?.basePrice || 0)
+         : currentBid + increment;
+
+   useEffect(() => {
+      setCustomBid(Number(nextBidAmount.toFixed(2)));
+      setShowCustomBid(false);
+   }, [
+      displayAuctionState?.playerId,
+      displayAuctionState?.currentBid
+   ]);
+
    const playerCategories = useMemo(() => {
       const soldIds = new Set();
       const soldWithBids = {};
@@ -634,7 +648,98 @@ const AuctionRoom = () => {
          setTimeout(() => setError(''), 3000);
       }
    };
+   const handleCustomBid = async () => {
+      const bidAmount = Number(customBid);
 
+      // Basic validation
+      if (!Number.isFinite(bidAmount)) {
+         setError('Invalid bid amount');
+         return;
+      }
+
+      // Someone else may have bid while the slider was open
+      const minimumAllowedBid =
+         displayAuctionState?.currentBid > 0
+            ? displayAuctionState.currentBid + increment
+            : (currentPlayer?.basePrice || 0);
+
+      if (bidAmount < minimumAllowedBid) {
+         setError(`Minimum bid is ₹${minimumAllowedBid.toFixed(2)} Cr`);
+         playBeep(220, 0.3);
+         setTimeout(() => setError(''), 3000);
+         return;
+      }
+
+      // Cannot bid if already leading
+      if (displayAuctionState?.highBidderId === user?.uid) {
+         setError('You are already the leading bidder');
+         setTimeout(() => setError(''), 3000);
+         return;
+      }
+
+      // Budget guard
+      const remainingBudget = Number(team?.budgetRemaining || 0);
+
+      if (bidAmount > remainingBudget) {
+         setError(`Insufficient Budget — only ₹${remainingBudget.toFixed(2)} Cr available`);
+         playBeep(220, 0.3);
+         setTimeout(() => setError(''), 3000);
+         return;
+      }
+
+      // Squad size guard
+      const squadLimit = currentAuction?.squadLimit || 25;
+
+      if ((team?.squad?.length || 0) >= squadLimit) {
+         setError(`Squad Full (Max ${squadLimit} Players)`);
+         playBeep(220, 0.3);
+         setTimeout(() => setError(''), 3000);
+         return;
+      }
+
+      // Overseas limit guard
+      const isOverseas = currentPlayer?.country !== 'IND';
+      const overseasLimit = currentAuction?.overseasLimit || 8;
+
+      if (isOverseas) {
+         const overseasCount = team?.squad?.filter(s => {
+            const pid = typeof s === 'string' ? s : s.id;
+            const p = IPL_PLAYERS.find(pl => pl.id === pid);
+            return p?.country !== 'IND';
+         }).length || 0;
+
+         if (overseasCount >= overseasLimit) {
+            setError(`Overseas Player Limit Reached (Max ${overseasLimit})`);
+            playBeep(220, 0.3);
+            setTimeout(() => setError(''), 3000);
+            return;
+         }
+      }
+
+      playBeep(880, 0.12);
+      setError('');
+
+      // Optimistic UI update
+      setOptimisticState({
+         ...displayAuctionState,
+         currentBid: bidAmount,
+         highBidderId: user?.uid,
+         highBidderName: user?.displayName || 'Manager',
+         highBidderTeamId: team?.teamId,
+         timerEndsAt:
+            getSyncedTime() +
+            (currentAuction?.settings?.bidTimer || 10) * 1000
+      });
+
+      try {
+         await placeBid(bidAmount);
+         setShowCustomBid(false);
+      } catch (err) {
+         setOptimisticState(null);
+         setError(err.message);
+         setTimeout(() => setError(''), 3000);
+      }
+   };
    const copyRoomId = () => {
       navigator.clipboard.writeText(id);
       setCopied(true);
@@ -705,7 +810,7 @@ const AuctionRoom = () => {
 
       return (
          <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/10 blur-[120px] rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 blur-[120px] rounded-full" />
             <div className="relative z-10 flex flex-col items-center w-full max-w-2xl">
                {availableTeams.length > 0 ? (
                   <>
@@ -729,7 +834,7 @@ const AuctionRoom = () => {
                                     ? 'border-yellow-400 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.2)] scale-105'
                                     : isTaken
                                        ? 'border-white/5 opacity-25 grayscale cursor-not-allowed'
-                                       : 'border-white/10 hover:border-yellow-500/30 hover:bg-white/5 hover:scale-105 active:scale-95'
+                                       : 'border-white/10 hover:border-blue-500/30 hover:bg-white/5 hover:scale-105 active:scale-95'
                                     }`}
                               >
                                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center ${isJoining ? 'animate-pulse' : ''}`}>
@@ -980,7 +1085,7 @@ const AuctionRoom = () => {
                <div className="h-14 border-b border-white/5 bg-white/[0.01] flex items-center px-6 md:px-8 w-full shrink-0">
                   <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-4">
                      <div className="flex items-center gap-3 md:gap-4">
-                        <div className="px-2 pb-0.5 md:px-3 bg-yellow-500/20 border border-yellow-500/30 rounded-md">
+                        <div className="px-2 pb-0.5 md:px-3 bg-yellow-500/20 border border-blue-500/30 rounded-md">
                            <span className="text-[8px] md:text-[9px] font-black text-yellow-500 uppercase tracking-widest ">{currentPlayer?.set}</span>
                         </div>
                         <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Base Price:</span>
@@ -1046,8 +1151,8 @@ const AuctionRoom = () => {
                                     <div className="flex-1 flex flex-col gap-5 md:gap-6 w-full text-center md:text-left">
                                        <div>
                                           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3 md:mb-4">
-                                             <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
-                                             <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.type}</span>
+                                             <span className="bg-blue-500/10 border border-blue-500/20 text-yellow-500 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
+                                             <span className="bg-purple-500/10 border border-purple-500/20 text-blue-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.type}</span>
                                           </div>
                                           <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-none">{currentPlayer.name}</h2>
                                        </div>
@@ -1082,18 +1187,178 @@ const AuctionRoom = () => {
                                        </div>
                                     </div>
                                  </div>
-                                 <div className="bg-black/20 border-t border-white/5 p-4 md:p-6 flex gap-3 md:gap-4">
-                                    <button
-                                       onClick={handleBid}
-                                       disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
-                                       className={`flex-1 h-14 md:h-18 font-black text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${displayAuctionState?.highBidderId === user?.uid
-                                          ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
-                                          : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
+                                 <div className="bg-black/20 border-t border-white/5 p-4 md:p-6">
+                                    {/* CUSTOM BID PANEL */}
+                                    <AnimatePresence>
+                                       {showCustomBid && displayAuctionState?.highBidderId !== user?.uid && (
+                                          <motion.div
+                                             initial={{ opacity: 0, height: 0, y: 10 }}
+                                             animate={{ opacity: 1, height: "auto", y: 0 }}
+                                             exit={{ opacity: 0, height: 0, y: 10 }}
+                                             className="overflow-hidden mb-4"
+                                          >
+                                             <div className="rounded-2xl border border-blue-500/20 bg-blue-500/[0.04] p-4">
+
+                                                <div className="flex items-center justify-between mb-3">
+                                                   <div>
+                                                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-400">
+                                                         Custom Bid
+                                                      </p>
+
+                                                      <p className="text-[11px] text-gray-500 mt-1">
+                                                         Jump directly to your desired bid
+                                                      </p>
+                                                   </div>
+
+                                                   <div className="text-right">
+                                                      <p className="text-[9px] uppercase tracking-widest text-gray-500">
+                                                         Your Bid
+                                                      </p>
+
+                                                      <p className="text-2xl font-black text-white">
+                                                         ₹{Number(customBid).toFixed(2)}
+                                                         <span className="text-xs text-gray-500 ml-1">
+                                                            Cr
+                                                         </span>
+                                                      </p>
+                                                   </div>
+                                                </div>
+
+                                                {/* RANGE SLIDER */}
+                                                <input
+                                                   type="range"
+                                                   min={Number(nextBidAmount.toFixed(2))}
+                                                   max={Number((team?.budgetRemaining || nextBidAmount).toFixed(2))}
+                                                   step="0.05"
+                                                   value={Number(customBid)}
+                                                   onChange={(e) => setCustomBid(Number(e.target.value))}
+                                                   disabled={
+                                                      timeLeft === 0 ||
+                                                      displayAuctionState?.status !== 'bidding' ||
+                                                      displayAuctionState?.highBidderId === user?.uid
+                                                   }
+                                                   className="w-full h-2 rounded-full appearance-none cursor-pointer accent-blue-500 bg-white/10"
+                                                />
+
+                                                {/* RANGE VALUES */}
+                                                <div className="flex justify-between mt-2 text-[9px] font-bold uppercase tracking-widest">
+                                                   <span className="text-gray-500">
+                                                      Min ₹{nextBidAmount.toFixed(2)} Cr
+                                                   </span>
+
+                                                   <span className="text-gray-500">
+                                                      Max ₹{Number(team?.budgetRemaining || 0).toFixed(2)} Cr
+                                                   </span>
+                                                </div>
+
+                                                {/* QUICK BID VALUES */}
+                                                <div className="flex flex-wrap gap-2 mt-4">
+                                                   {[5, 7.5, 10, 15, 20].map((value) => {
+                                                      const maxBudget = Number(team?.budgetRemaining || 0);
+                                                      const minBid = Number(nextBidAmount);
+
+                                                      if (value < minBid || value > maxBudget) {
+                                                         return null;
+                                                      }
+
+                                                      return (
+                                                         <button
+                                                            key={value}
+                                                            type="button"
+                                                            onClick={() => setCustomBid(value)}
+                                                            className={`px-3 py-2 rounded-xl border text-[10px] font-black transition-all ${
+                                                               Number(customBid) === value
+                                                                  ? 'bg-blue-500 text-white border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.25)]'
+                                                                  : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                                                            }`}
+                                                         >
+                                                            ₹{value} Cr
+                                                         </button>
+                                                      );
+                                                   })}
+                                                </div>
+
+                                                {/* CONFIRM CUSTOM BID */}
+                                                <button
+                                                   type="button"
+                                                   onClick={handleCustomBid}
+                                                   disabled={
+                                                      timeLeft === 0 ||
+                                                      displayAuctionState?.status !== 'bidding' ||
+                                                      displayAuctionState?.highBidderId === user?.uid ||
+                                                      Number(customBid) < Number(nextBidAmount) ||
+                                                      Number(customBid) > Number(team?.budgetRemaining || 0)
+                                                   }
+                                                   className="w-full mt-4 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white font-black uppercase tracking-wider text-xs transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_5px_25px_rgba(59,130,246,0.2)]"
+                                                >
+                                                   BID ₹{Number(customBid).toFixed(2)} Cr
+                                                </button>
+
+                                             </div>
+                                          </motion.div>
+                                       )}
+                                    </AnimatePresence>
+
+                                    {/* MAIN AUCTION BUTTONS */}
+                                    <div className="flex gap-3 md:gap-4">
+
+                                       {/* NORMAL BID */}
+                                       <button
+                                          onClick={handleBid}
+                                          disabled={
+                                             timeLeft === 0 ||
+                                             displayAuctionState?.status !== 'bidding' ||
+                                             displayAuctionState?.highBidderId === user?.uid
+                                          }
+                                          className={`flex-1 h-14 md:h-18 font-black text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${
+                                             displayAuctionState?.highBidderId === user?.uid
+                                                ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
+                                                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
                                           }`}
-                                    >
-                                       {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
-                                    </button>
-                                    <button onClick={() => setShowPlayersOverlay(true)} className="w-14 h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
+                                       >
+                                          {displayAuctionState?.status === 'paused'
+                                             ? 'PAUSED'
+                                             : displayAuctionState?.highBidderId === user?.uid
+                                                ? 'LEADING BIDDER'
+                                                : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
+                                       </button>
+
+                                       {/* CUSTOM BID BUTTON */}
+                                       {displayAuctionState?.highBidderId !== user?.uid &&
+                                          displayAuctionState?.status === 'bidding' && (
+                                             <button
+                                                type="button"
+                                                onClick={() => {
+                                                   setCustomBid(Number(nextBidAmount.toFixed(2)));
+                                                   setShowCustomBid((prev) => !prev);
+                                                }}
+                                                disabled={timeLeft === 0}
+                                                className={`w-14 md:w-20 h-14 md:h-18 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all active:scale-[0.96] ${
+                                                   showCustomBid
+                                                      ? 'bg-blue-500/20 border-blue-400 text-blue-300 shadow-[0_0_25px_rgba(59,130,246,0.2)]'
+                                                      : 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-400 hover:text-blue-300'
+                                                }`}
+                                                title="Custom Bid"
+                                             >
+                                                <span className="text-lg md:text-xl font-black">
+                                                   ₹
+                                                </span>
+
+                                                <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest">
+                                                   Custom
+                                                </span>
+                                             </button>
+                                          )}
+
+                                       {/* PLAYER LIST */}
+                                       <button
+                                          onClick={() => setShowPlayersOverlay(true)}
+                                          className="w-14 md:w-18 h-14 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+                                       >
+                                          <List size={20} />
+                                       </button>
+
+                                    </div>
                                  </div>
                               </div>
                            </motion.div>
@@ -1284,7 +1549,7 @@ const AuctionRoom = () => {
                                  <div key={setName} className="space-y-6">
                                     <div className="flex items-center gap-6">
                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
-                                       <h3 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] bg-yellow-500/5 px-6 py-2 rounded-full border border-yellow-500/10 ">
+                                       <h3 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] bg-blue-500/5 px-6 py-2 rounded-full border border-yellow-500/10 ">
                                           {setName}
                                        </h3>
                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />

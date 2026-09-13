@@ -17,25 +17,25 @@ const BuyMeACoffee = () => {
   const [customAmount, setCustomAmount] = useState('100');
 
 
-  const developerName = "Shaurya";
-  const upiId = "shaurya69889@oksbi";
+  const developerName = "BANDI VARUN KUMAR";
+  const upiId = "varunkumarbandi4@oksbi";
 
   const tiers = {
     coffee: {
       name: "Coffee",
-      amountINR: 150,
+      amountINR: 10,
       icon: <Coffee className="w-4 h-4 text-amber-500" />,
       tagline: "Late-night coding fuel ☕"
     },
     pizza: {
       name: "Pizza",
-      amountINR: 350,
-      icon: <Pizza className="w-4 h-4 text-orange-500" />,
+      amountINR: 50,
+      icon: <Pizza className="w-4 h-4 text-yellow-500" />,
       tagline: "Hosting & database funds 🍕"
     },
     rocket: {
       name: "Super Fan",
-      amountINR: 750,
+      amountINR: 70,
       icon: <Rocket className="w-4 h-4 text-red-500" />,
       tagline: "Future features support 🚀"
     }

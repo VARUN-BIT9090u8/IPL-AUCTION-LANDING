@@ -136,7 +136,7 @@ const SquadSelector = ({
         {!isLocked && (
           <button 
             onClick={handleSave}
-            className="px-8 py-3 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-[#ff5500] hover:text-white transition-all shadow-xl active:scale-95"
+            className="px-8 py-3 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-[#efb100] hover:text-white transition-all shadow-xl active:scale-95"
           >
             Save Squad Configuration
           </button>
@@ -146,8 +146,8 @@ const SquadSelector = ({
       {/* Constraints Dashboard */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Playing XI', val: `${selectedIds.length}/11`, icon: Users, color: selectedIds.length === 11 ? 'text-green-500' : 'text-blue-400' },
-          { label: 'Impact Player', val: impactId ? 'Selected' : 'None', icon: Zap, color: impactId ? 'text-orange-500' : 'text-gray-600' },
+          { label: 'Playing XI', val: `${selectedIds.length}/11`, icon: Users, color: selectedIds.length === 11 ? 'text-green-500' : 'text-yellow-500' },
+          { label: 'Impact Player', val: impactId ? 'Selected' : 'None', icon: Zap, color: impactId ? 'text-yellow-500' : 'text-gray-600' },
           { label: 'Captain', val: captainId ? 'Set' : 'Missing', icon: Crown, color: captainId ? 'text-yellow-500' : 'text-gray-600' },
           { label: 'Vice-Captain', val: viceCaptainId ? 'Set' : 'Missing', icon: Star, color: viceCaptainId ? 'text-purple-500' : 'text-gray-600' },
         ].map(stat => (
@@ -169,7 +169,7 @@ const SquadSelector = ({
           return (
             <div key={role} className="space-y-4">
               <div className="flex items-center gap-4">
-                <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">{role}s</span>
+                <span className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.3em]">{role}s</span>
                 <div className="flex-1 h-px bg-white/5" />
               </div>
 
@@ -184,8 +184,8 @@ const SquadSelector = ({
                     <div 
                       key={player.id}
                       className={`group relative bg-[#0a0a0a] border rounded-3xl transition-all p-4 ${
-                        isSelected ? 'border-blue-500/50 bg-blue-500/5' : 
-                        isImpact ? 'border-orange-500/50 bg-orange-500/5' : 
+                        isSelected ? 'border-yellow-500/50 bg-blue-500/5' : 
+                        isImpact ? 'border-yellow-500/50 bg-yellow-500/5' : 
                         'border-white/5 hover:border-white/20'
                       }`}
                     >
@@ -200,7 +200,7 @@ const SquadSelector = ({
                           <div className="flex items-center gap-2">
                             <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{player.teamId} • {player.type}</p>
                             {playerStats[player.id] && (
-                              <span className="text-[8px] font-black text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded leading-none">
+                              <span className="text-[8px] font-black text-yellow-500 bg-blue-500/10 px-1.5 py-0.5 rounded leading-none">
                                 Avg: {(playerStats[player.id].totalPoints / playerStats[player.id].matches).toFixed(1)}
                               </span>
                             )}
@@ -225,7 +225,7 @@ const SquadSelector = ({
                           onClick={() => setAsImpact(player.id)}
                           className={`px-3 py-2 rounded-xl transition-all ${
                             isImpact 
-                              ? 'bg-orange-600 text-white' 
+                              ? 'bg-yellow-600 text-white' 
                               : 'bg-white/5 text-gray-500 hover:bg-white/10'
                           }`}
                         >

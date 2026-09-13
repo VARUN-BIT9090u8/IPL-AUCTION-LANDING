@@ -172,7 +172,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
             onClick={() => setActiveSubTab(tab.id)}
             className={`px-6 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-3 ${
               activeSubTab === tab.id 
-                ? 'bg-orange-600 text-white shadow-lg' 
+                ? 'bg-yellow-600 text-white shadow-lg' 
                 : 'text-gray-500 hover:text-white'
             }`}
           >
@@ -222,11 +222,11 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
             {/* Header */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-[#ff5500] rounded-3xl flex items-center justify-center text-white shadow-[0_0_40px_rgba(255,85,0,0.4)]">
+                <div className="w-16 h-16 bg-[#efb100] rounded-3xl flex items-center justify-center text-white shadow-[0_0_40px_rgba(255,85,0,0.4)]">
                    <Trophy size={32} />
                 </div>
                 <div>
-                  <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter drop-shadow-2xl italic leading-none">Room <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Standings</span></h2>
+                  <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter drop-shadow-2xl italic leading-none">Room <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-sky-500">Standings</span></h2>
                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-2 ml-1">Live Fantasy Points Table</p>
                 </div>
               </div>
@@ -273,7 +273,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
                                    {entry.userId === user?.uid && (
                                      <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full shrink-0">
                                         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
-                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">YOU</span>
+                                        <span className="text-[10px] font-black text-yellow-500 uppercase tracking-widest leading-none">YOU</span>
                                      </div>
                                    )}
                                 </div>
@@ -288,7 +288,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
                            <div className="text-right border-r border-white/5 pr-8">
                               <div className="flex flex-col items-center">
                                  <span className={`text-4xl font-black leading-none ${
-                                   entry.avgPoints > 0 && idx < 3 ? 'text-[#ff5500] drop-shadow-[0_0_20px_rgba(255,85,0,0.3)]' : entry.avgPoints > 0 ? 'text-blue-500' : 'text-gray-700'
+                                   entry.avgPoints > 0 && idx < 3 ? 'text-yellow-500 drop-shadow-[0_0_20px_rgba(255,85,0,0.3)]' : entry.avgPoints > 0 ? 'text-blue-500' : 'text-gray-700'
                                  }`}>
                                    {entry.avgPoints}
                                  </span>
@@ -301,9 +301,9 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
                            {/* Rank Indicator Badge */}
                            {idx < 3 && entry.avgPoints > 0 ? (
                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border ${
-                               idx === 0 ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500' :
+                               idx === 0 ? 'bg-yellow-500/20 border-blue-500/30 text-yellow-500' :
                                idx === 1 ? 'bg-gray-400/20 border-gray-400/30 text-gray-300' :
-                               'bg-orange-900/20 border-orange-800/30 text-orange-600'
+                               'bg-yellow-900/20 border-yellow-800/30 text-blue-600'
                              }`}>
                                 <Trophy size={20} />
                              </div>

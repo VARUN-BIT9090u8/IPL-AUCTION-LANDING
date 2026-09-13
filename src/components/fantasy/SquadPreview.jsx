@@ -35,7 +35,7 @@ const SquadPreview = ({
   }, [currentSquad]);
 
   const roles = [
-    { name: 'Batsman', icon: Sword, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { name: 'Batsman', icon: Sword, color: 'text-yellow-500', bg: 'bg-blue-500/10' },
     { name: 'Wicket-Keeper', icon: User, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
     { name: 'All-Rounder', icon: Target, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { name: 'Bowler', icon: Shield, color: 'text-blue-500', bg: 'bg-blue-500/10' }
@@ -49,7 +49,7 @@ const SquadPreview = ({
         <p className="text-xs text-gray-500 mb-8 max-w-sm mx-auto">You haven't configured your Playing 11 yet. Create your squad to start earning fantasy points.</p>
         <button 
           onClick={onEdit} 
-          className="px-8 py-3 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-[#ff5500] hover:text-white transition-all shadow-xl active:scale-95"
+          className="px-8 py-3 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-[#efb100] hover:text-white transition-all shadow-xl active:scale-95"
         >
           Create Squad Now
         </button>
@@ -62,7 +62,7 @@ const SquadPreview = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tight italic mb-2">Final XI <span className="text-[#ff5500]">Dashboard</span></h2>
+          <h2 className="text-3xl font-black uppercase tracking-tight italic mb-2">Final XI <span className="text-yellow-500">Dashboard</span></h2>
           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] flex items-center gap-2">
             Selection Status: <span className="text-green-500">Confirmed</span> • Refreshed Recently
           </p>
@@ -148,20 +148,20 @@ const SquadPreview = ({
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="max-w-md bg-gradient-to-r from-orange-600/10 to-transparent border-l-4 border-orange-600 p-8 rounded-r-3xl"
+          className="max-w-md bg-gradient-to-r from-blue-600/10 to-transparent border-l-4 border-blue-600 p-8 rounded-r-3xl"
         >
           <div className="flex items-center gap-2 mb-4">
-            <Zap size={16} className="text-orange-500 fill-orange-500" />
-            <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">Impact Player Selected</span>
+            <Zap size={16} className="text-yellow-500 fill-blue-500" />
+            <span className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.3em]">Impact Player Selected</span>
           </div>
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-black/60 rounded-2xl border border-orange-500/20 p-1 shrink-0 overflow-hidden shadow-2xl">
+            <div className="w-16 h-16 bg-black/60 rounded-2xl border border-blue-500/20 p-1 shrink-0 overflow-hidden shadow-2xl">
               <img src={impactPlayer.image} alt="" className="w-full h-full object-cover" />
             </div>
             <div>
               <h3 className="text-xl font-black uppercase tracking-tight italic">{impactPlayer.name}</h3>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{impactPlayer.role} • {impactPlayer.teamId}</p>
-              <div className="mt-2 text-[9px] font-black text-orange-600 uppercase tracking-tighter">
+              <div className="mt-2 text-[9px] font-black text-blue-600 uppercase tracking-tighter">
                 Available to activate mid-innings
               </div>
             </div>

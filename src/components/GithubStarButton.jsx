@@ -8,7 +8,7 @@ const GithubStarButton = () => {
   useEffect(() => {
     const fetchStars = async () => {
       try {
-        const response = await fetch('https://api.github.com/repos/Shaurya01836/ipl-auction');
+        const response = await fetch('https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING');
         const data = await response.json();
         if (data.stargazers_count !== undefined) {
           const count = data.stargazers_count;
@@ -30,7 +30,7 @@ const GithubStarButton = () => {
 
   return (
     <motion.a
-      href="https://github.com/Shaurya01836/ipl-auction"
+      href="https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING"
       target="_blank"
       rel="noopener noreferrer"
       initial={{ opacity: 0, x: 20 }}

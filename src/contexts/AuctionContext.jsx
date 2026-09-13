@@ -40,7 +40,7 @@ const TEAMS = [
   { id: 'DC', name: 'Delhi Capitals', color: 'bg-blue-500' },
   { id: 'PBKS', name: 'Punjab Kings', color: 'bg-red-500' },
   { id: 'RR', name: 'Rajasthan Royals', color: 'bg-pink-600' },
-  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-orange-500' },
+  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-yellow-500' },
   { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700' },
   { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800' },
 ];
@@ -666,71 +666,212 @@ export const AuctionProvider = ({ children }) => {
   }, [user]);
 
   const placeBid = useCallback(async (amount) => {
-    if (!currentAuction) throw new Error("Auction not found!");
-    if (!user) throw new Error("Please log in to bid!");
-    if (!team) throw new Error("You must select a team in the lobby to participate!");
-    if (currentAuction.bannedPlayers && currentAuction.bannedPlayers.includes(user.uid)) {
-      throw new Error("You have been removed from this auction and cannot bid.");
-    }
-    if (currentAuction.currentAuction?.status !== 'bidding') throw new Error("Auction is not accepting bids right now.");
-    if (currentAuction.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
-    
-    // Squad limit check
-    const squadLimit = currentAuction.squadLimit || 25;
-    if (team.squad && team.squad.length >= squadLimit) {
-      throw new Error(`You have reached the squad limit of ${squadLimit} players!`);
+    if (!currentAuction) {
+      throw new Error("Auction not found!");
     }
 
-    // Overseas limit check
-    const player = IPL_PLAYERS.find(p => p.id === currentAuction.currentAuction?.playerId);
-    const isOverseas = player && player.country !== 'IND';
+    if (!user) {
+      throw new Error("Please log in to bid!");
+    }
+
+    if (!team) {
+      throw new Error("You must select a team in the lobby to participate!");
+    }
+
+    if (
+      currentAuction.bannedPlayers &&
+      currentAuction.bannedPlayers.includes(user.uid)
+    ) {
+      throw new Error(
+        "You have been removed from this auction and cannot bid."
+      );
+    }
+
+    if (currentAuction.currentAuction?.status !== "bidding") {
+      throw new Error("Auction is not accepting bids right now.");
+    }
+
+    if (currentAuction.currentAuction?.highBidderId === user.uid) {
+      throw new Error("You are already the highest bidder!");
+    }
+
+    // --------------------------------------------------
+    // BASIC AMOUNT VALIDATION
+    // --------------------------------------------------
+
+    const requestedAmount = Number(amount);
+
+    if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+      throw new Error("Invalid bid amount.");
+    }
+
+    // --------------------------------------------------
+    // SQUAD LIMIT
+    // --------------------------------------------------
+
+    const squadLimit = currentAuction.squadLimit || 25;
+
+    if (team.squad && team.squad.length >= squadLimit) {
+      throw new Error(
+        `You have reached the squad limit of ${squadLimit} players!`
+      );
+    }
+
+    // --------------------------------------------------
+    // OVERSEAS LIMIT
+    // --------------------------------------------------
+
+    const player = IPL_PLAYERS.find(
+      (p) => p.id === currentAuction.currentAuction?.playerId
+    );
+
+    const isOverseas = player && player.country !== "IND";
     const overseasLimit = currentAuction.overseasLimit || 8;
-    
+
     if (isOverseas && team.squad) {
       const currentOverseasCount = team.squad.reduce((count, s) => {
-        const pInfo = IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
-        return pInfo && pInfo.country !== 'IND' ? count + 1 : count;
+        const pInfo = IPL_PLAYERS.find(
+          (p) => p.id === (typeof s === "string" ? s : s.id)
+        );
+
+        return pInfo && pInfo.country !== "IND"
+          ? count + 1
+          : count;
       }, 0);
-      
+
       if (currentOverseasCount >= overseasLimit) {
-        throw new Error(`You have reached the overseas quota of ${overseasLimit} players for this mode!`);
+        throw new Error(
+          `You have reached the overseas quota of ${overseasLimit} players for this mode!`
+        );
       }
     }
 
-    const auctionDoc = doc(db, 'auctions', currentAuction.id);
-    let finalAmount = amount;
+    // --------------------------------------------------
+    // REAL-TIME BID TRANSACTION
+    // --------------------------------------------------
 
-    const liveRef = ref(rtdb, `auctions/${currentAuction.id}/live`);
-    await runTransactionRtdb(liveRef, (currentData) => {
-      if (!currentData) return currentData;
-      if (currentData.status !== 'bidding') return; // abort
-      if (currentData.highBidderId === user.uid) return; // abort
-      
-      const cBid = currentData.currentBid || 0;
-      const inc = cBid < 5 ? 0.20 : 0.25;
-      const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : cBid + inc;
-      
-      if (team.budgetRemaining < nAmount) return; // abort
+    let finalAmount = requestedAmount;
 
-      finalAmount = nAmount;
-      currentData.currentBid = nAmount;
-      currentData.highBidderId = user.uid;
-      currentData.highBidderName = user.displayName || 'Manager';
-      currentData.highBidderTeamId = team.teamId;
-      currentData.timerEndsAt = getSyncedTime() + (currentAuction.settings?.bidTimer || 10) * 1000;
-      
-      return currentData;
-    });
+    const liveRef = ref(
+      rtdb,
+      `auctions/${currentAuction.id}/live`
+    );
 
-    // Add to messages collection for chronological sorting
-    const msgRef = ref(rtdb, `auctions/${currentAuction.id}/messages`);
+    const transactionResult = await runTransactionRtdb(
+      liveRef,
+      (currentData) => {
+        // Auction data disappeared
+        if (!currentData) {
+          return;
+        }
+
+        // Auction must still be live
+        if (currentData.status !== "bidding") {
+          return;
+        }
+
+        // Someone else may have bid while we were submitting
+        if (currentData.highBidderId === user.uid) {
+          return;
+        }
+
+        const currentBid = Number(
+          currentData.currentBid || 0
+        );
+
+        // IPL-style increment
+        const increment = currentBid < 5 ? 0.20 : 0.25;
+
+        // Minimum legal bid
+        const minimumBid =
+          currentBid === 0
+            ? Number(
+                IPL_PLAYERS.find(
+                  (p) => p.id === currentData.playerId
+                )?.basePrice || 0
+              )
+            : Number(
+                (currentBid + increment).toFixed(2)
+              );
+
+        /*
+        * IMPORTANT:
+        *
+        * Normal bid:
+        *     amount = nextBidAmount
+        *
+        * Custom bid:
+        *     amount = selected slider value
+        *
+        * We allow the requested amount when it is
+        * greater than the minimum legal bid.
+        */
+        const bidAmount = Number(
+          Math.max(requestedAmount, minimumBid).toFixed(2)
+        );
+
+        // ------------------------------------------------
+        // BUDGET CHECK
+        // ------------------------------------------------
+
+        const availableBudget = Number(
+          team.budgetRemaining || 0
+        );
+
+        if (bidAmount > availableBudget) {
+          return;
+        }
+
+        // ------------------------------------------------
+        // ACCEPT BID
+        // ------------------------------------------------
+
+        finalAmount = bidAmount;
+
+        currentData.currentBid = bidAmount;
+        currentData.highBidderId = user.uid;
+        currentData.highBidderName =
+          user.displayName || "Manager";
+        currentData.highBidderTeamId = team.teamId;
+
+        currentData.timerEndsAt =
+          getSyncedTime() +
+          (currentAuction.settings?.bidTimer || 10) * 1000;
+
+        return currentData;
+      }
+    );
+
+    // --------------------------------------------------
+    // VERY IMPORTANT:
+    // CHECK WHETHER TRANSACTION ACTUALLY COMMITTED
+    // --------------------------------------------------
+
+    if (!transactionResult?.committed) {
+      throw new Error(
+        "Bid was rejected. Another player may have bid first, the auction may have ended, or your budget is insufficient."
+      );
+    }
+
+    // --------------------------------------------------
+    // ADD BID TO LIVE ACTIVITY
+    // --------------------------------------------------
+
+    const msgRef = ref(
+      rtdb,
+      `auctions/${currentAuction.id}/messages`
+    );
+
     await push(msgRef, {
-      userId: 'system',
-      userName: 'System',
-      text: `New bid: ₹${finalAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'} (${team.teamId})`,
-      type: 'log',
+      userId: "system",
+      userName: "System",
+      text: `New bid: ₹${finalAmount.toFixed(2)} Cr by ${
+        user.displayName || "Manager"
+      } (${team.teamId})`,
+      type: "log",
       timestamp: serverTimestampRtdb()
     });
+
   }, [currentAuction, user, team]);
 
   const updatePlayerTeam = useCallback(async (roomId, userId, newTeamId) => {
