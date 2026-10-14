@@ -6,6 +6,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
+import { Zap } from 'lucide-react';
+import { ref, update } from 'firebase/database';
+import { database } from '../lib/firebase';  
+import { db } from '../lib/firebase';
 
 import {
    Wallet,
@@ -47,6 +51,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { TEAMS } from '../data/teams';
 import TextChat from '../components/TextChat';
 import PageLoader from '../components/PageLoader';
+import HostPickModal from '../components/HostPickModal';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -334,6 +340,65 @@ const AuctionRoom = () => {
    }, []);
 
    const isAdmin = currentAuction?.hostId === user?.uid;
+   const [showPickModal, setShowPickModal] = useState(false);
+   const handleHostPick = async (player) => {
+   try {
+      const currentOrder =
+         currentAuction?.playerOrder ||
+         Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+
+      const selectedIndex = IPL_PLAYERS.findIndex(
+         (p) => p.id === player.id
+      );
+
+      if (selectedIndex === -1) {
+         throw new Error('Selected player not found');
+      }
+
+      const livePlayerId = displayAuctionState?.playerId;
+      const livePlayerIndex = IPL_PLAYERS.findIndex(
+         (p) => p.id === livePlayerId
+      );
+
+      if (livePlayerIndex === -1) {
+         throw new Error('No active player found');
+      }
+
+      if (selectedIndex === livePlayerIndex) {
+         console.log('This player is already being auctioned');
+         return;
+      }
+
+      // Remove the selected player from their current position.
+      const newOrder = currentOrder.filter(
+         (idx) => idx !== selectedIndex
+      );
+
+      // Insert immediately after the active player.
+      const activePosition = newOrder.indexOf(livePlayerIndex);
+
+      if (activePosition === -1) {
+         throw new Error('Active player is missing from the queue');
+      }
+
+      newOrder.splice(activePosition + 1, 0, selectedIndex);
+
+      // Persist to both databases. endPlayerAuction reads Firestore.
+      await Promise.all([
+         updateDoc(doc(db, 'auctions', id), {
+         playerOrder: newOrder,
+         }),
+         update(ref(database, `auctions/${id}/room`), {
+         playerOrder: newOrder,
+         }),
+      ]);
+
+      console.log(`Next player selected: ${player.name}`);
+   } catch (err) {
+      console.error('Host pick failed:', err);
+   }
+   };
+
    const currentBid = displayAuctionState?.currentBid || 0;
    const increment = currentBid < 5 ? 0.20 : 0.25;
    const nextBidAmount =
@@ -1154,8 +1219,25 @@ const AuctionRoom = () => {
                                              <span className="bg-blue-500/10 border border-blue-500/20 text-yellow-500 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
                                              <span className="bg-purple-500/10 border border-purple-500/20 text-blue-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.type}</span>
                                           </div>
-                                          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-none">{currentPlayer.name}</h2>
-                                       </div>
+                                          <div className="flex flex-col gap-4">
+                                             {isAdmin && (
+                                                <button
+                                                   onClick={() => setShowPickModal(true)}
+                                                   className="w-fit bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
+                                                >
+                                                   <Zap size={18} />
+                                                   ⚡ Pick Next Player
+                                                </button>
+                                             )}
+                                             
+                                             <div className="flex items-center gap-3">
+                                             <h2 className="text-4xl font-bold">{currentPlayer?.name}</h2>
+                                             {currentPlayer?.tier === 1 && <span className=" text-black px-2 py-1 rounded text-xs font-bold">👑</span>}
+                                             {currentPlayer?.tier === 2 && <span className=" text-black px-2 py-1 rounded text-xs font-bold">🔥</span>}
+                                             {currentPlayer?.tier === 3 && <span className=" text-black px-2 py-1 rounded text-xs font-bold">📈</span>}
+                                             </div>
+                                             </div>
+                                          </div>
                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-white/[0.02] p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md">
                                           <div className="text-center"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-xl font-bold text-gray-100">{currentPlayer.stats?.matches || 0}</span></div>
                                           {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-xl font-bold text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
@@ -1722,6 +1804,14 @@ const AuctionRoom = () => {
                </motion.div>
             )}
          </AnimatePresence>
+         {showPickModal && (
+         <HostPickModal
+            onClose={() => setShowPickModal(false)}
+            onPick={handleHostPick}
+            soldPlayerIds={new Set(roomTeams.flatMap(t => (t.squad || []).map(s => typeof s === 'string' ? s : s.id)))}
+            currentPlayerId={displayAuctionState?.playerId}
+         />
+         )}
       </div>
    );
 };
@@ -1790,6 +1880,7 @@ const SoldCard = ({ msg }) => {
          <button onClick={handleSave} className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 hover:border-white/10 text-gray-400 hover:text-white">
             <Download size={14} /> Save Player Card
          </button>
+      
       </div>
    );
 };
