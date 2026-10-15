@@ -8,7 +8,7 @@ const GithubStarButton = () => {
   useEffect(() => {
     const fetchStars = async () => {
       try {
-        const response = await fetch('https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING');
+        const response = await fetch('https://api.github.com/repos/VARUN-BIT9090u8/IPL-AUCTION-LANDING');
         const data = await response.json();
         if (data.stargazers_count !== undefined) {
           const count = data.stargazers_count;

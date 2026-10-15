@@ -10,6 +10,12 @@ import { Zap } from 'lucide-react';
 import { ref, update } from 'firebase/database';
 import { database } from '../lib/firebase';  
 import { db } from '../lib/firebase';
+import BudgetAlert from '../components/BudgetAlert';
+import {
+  MoreVertical,
+  ChevronDown,
+  // Keep your existing imports
+} from 'lucide-react';
 
 import {
    Wallet,
@@ -39,7 +45,6 @@ import {
    PlayCircle,
    Filter,
    Search,
-   ChevronDown,
    Play,
    ShieldAlert,
    Trophy,
@@ -96,6 +101,7 @@ const AuctionRoom = () => {
    const [banError, setBanError] = useState(null);
    const [showCustomBid, setShowCustomBid] = useState(false);
    const [customBid, setCustomBid] = useState(0);
+   const [showActionMenu, setShowActionMenu] = useState(false);
    // Clear optimistic state when DB catches up
    useEffect(() => {
       if (optimisticState && currentAuction?.currentAuction?.currentBid >= optimisticState.currentBid) {
@@ -938,9 +944,120 @@ const AuctionRoom = () => {
    }
 
    return (
-      <div className="h-screen bg-[#0d0d0d] text-white font-sans flex flex-col items-center overflow-hidden">
+         <div className="h-dvh bg-[#0d0d0d] text-white font-sans flex flex-col overflow-hidden">
+         {/* Top row: Budget alert on left, Actions dropdown on right */}
+        {/* Mobile only: Budget + Actions dropdown */}
+            <div className="flex md:hidden w-full shrink-0 items-center justify-between gap-2 px-2 py-2 bg-black">
+            <div className="min-w-0 flex-1">
+               <BudgetAlert team={team} auction={currentAuction} />
+            </div>
 
-         <header className="w-full min-h-14 h-auto md:h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3 md:py-0 z-50 gap-4 md:gap-0">
+            <div className="relative shrink-0">
+               {/* Move your existing Actions dropdown button and menu here */}
+               <div className="relative z-[100]">
+            <button
+               type="button"
+               onClick={() => setShowActionMenu(prev => !prev)}
+               className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-gray-300"
+            >
+               <SettingsIcon size={16} />
+               <ChevronDown
+                  size={14}
+                  className={showActionMenu ? "rotate-180" : ""}
+               />
+            </button>
+
+            {showActionMenu && (
+               <div className="absolute right-0 top-full mt-2 z-[9999] w-52 max-h-[70dvh] overflow-y-auto rounded-xl border border-white/10 bg-[#111] p-2 shadow-2xl">
+                  {isAdmin && (
+                  <>
+                     <button
+                        onClick={() => {
+                        setShowActionMenu(false);
+                        displayAuctionState?.status === "paused"
+                           ? resumeAuction(id)
+                           : pauseAuction(id);
+                        }}
+                        className="w-full rounded-lg p-3 text-left text-sm hover:bg-white/10"
+                     >
+                        {displayAuctionState?.status === "paused" ? "Resume Auction" : "Pause Auction"}
+                     </button>
+
+                     <button
+                        onClick={() => {
+                        setShowActionMenu(false);
+                        endAuction(id);
+                        }}
+                        className="w-full rounded-lg p-3 text-left text-sm text-red-400 hover:bg-white/10"
+                     >
+                        End Auction
+                     </button>
+
+                     <button
+                        onClick={() => {
+                        setShowActionMenu(false);
+                        setShowParticipantsOverlay(true);
+                        }}
+                        className="w-full rounded-lg p-3 text-left text-sm hover:bg-white/10"
+                     >
+                        Participants
+                     </button>
+                  </>
+                  )}
+
+                  <button
+                  onClick={() => {
+                     const enabled = !isTtsEnabled;
+                     setIsTtsEnabled(enabled);
+
+                     if (!enabled) {
+                        window.speechSynthesis?.cancel();
+                     } else {
+                        speak("Voice Auctioneer enabled.");
+                     }
+
+                     setShowActionMenu(false);
+                  }}
+                  className="w-full rounded-lg p-3 text-left text-sm hover:bg-white/10"
+                  >
+                  {isTtsEnabled ? "Mute Voice" : "Enable Voice"}
+                  </button>
+
+                  <button
+                  onClick={() => {
+                     setShowSettings(prev => !prev);
+                     setShowActionMenu(false);
+                  }}
+                  className="w-full rounded-lg p-3 text-left text-sm hover:bg-white/10"
+                  >
+                  Settings
+                  </button>
+
+                  <button
+                  onClick={() => {
+                     setShowActionMenu(false);
+                     navigate("/");
+                  }}
+                  className="w-full rounded-lg p-3 text-left text-sm hover:bg-white/10"
+                  >
+                  Main Menu
+                  </button>
+
+                  <button
+                  onClick={() => {
+                     setShowActionMenu(false);
+                     logout();
+                  }}
+                  className="w-full rounded-lg p-3 text-left text-sm text-red-400 hover:bg-white/10"
+                  >
+                  Logout
+                  </button>
+               </div>
+            )}
+            </div>
+            </div>
+         </div>
+         <header className="relative z-50 hidden md:flex w-full h-14 shrink-0 items-center justify-between px-6 bg-black/40 border-b border-white/5">
             <div className="flex items-center gap-3 md:gap-6">
                <div className="flex items-center gap-1.5 sm:gap-3">
                   <span className="text-gray-500 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">ID:</span>
@@ -1020,13 +1137,13 @@ const AuctionRoom = () => {
             </div>
          </header>
 
-         <div className="w-full flex flex-col md:flex-row flex-1 overflow-hidden relative">
+         <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative">
             <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-80 bg-black/40 border-r border-white/5 flex-col h-full md:max-h-[calc(100vh-3.5rem)]`}>
                <div className="h-14 border-b border-white/5 bg-white/[0.01] flex items-center px-6 shrink-0">
                   <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Auction Teams</span>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+               <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
                   {TEAMS.map((t, idx) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
@@ -1143,7 +1260,7 @@ const AuctionRoom = () => {
                      );
                   })}
                </div>
-            </aside>
+            </aside> 
 
             <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden`}>
                {/* Center Fixed Header */}
@@ -1166,8 +1283,8 @@ const AuctionRoom = () => {
                </div>
 
                {/* Center Scrollable Main Body */}
-               <main className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar">
-                  <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
+               <main className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4 md:p-8 flex flex-col items-center custom-scrollbar">
+                  <div className="w-full max-w-4xl flex flex-col gap-2 sm:gap-4 md:gap-6">
                      <AnimatePresence mode="wait">
                         {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (
                            <motion.div
@@ -1204,16 +1321,16 @@ const AuctionRoom = () => {
                               </div>
                            </motion.div>
                         ) : (
-                           <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-4 md:gap-6 flex">
-                              <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px]">
+                           <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-2 sm:gap-4 md:gap-6 flex">
+                              <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative">
                                  <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
                                     <motion.div initial={{ width: "100%" }} animate={{ width: `${(timeLeft / (currentAuction?.settings?.bidTimer || 10)) * 100}%` }} className={`h-full transition-colors duration-1000 ${timeLeft < 5 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
                                  </div>
-                                 <div className="p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-                                    <div className="w-36 h-36 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500">
+                                 <div className="p-3 sm:p-5 md:p-6 xl:p-10 flex flex-col md:flex-row items-center gap-3 sm:gap-5 md:gap-6 xl:gap-10">
+                                    <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-60 md:h-80 shrink-0 bg-gradient-to-b from-white/10 to-transparent rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4]">
                                        <img src={currentPlayer.image} alt={currentPlayer.name} className="w-full h-full object-cover" />
                                     </div>
-                                    <div className="flex-1 flex flex-col gap-5 md:gap-6 w-full text-center md:text-left">
+                                    <div className="flex-1 min-w-0 flex flex-col gap-2 sm:gap-4 md:gap-6 w-full text-center md:text-left">
                                        <div>
                                           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3 md:mb-4">
                                              <span className="bg-blue-500/10 border border-blue-500/20 text-yellow-500 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
@@ -1223,32 +1340,31 @@ const AuctionRoom = () => {
                                              {isAdmin && (
                                                 <button
                                                    onClick={() => setShowPickModal(true)}
-                                                   className="w-fit bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
+                                                   className="w-full  border border-white/10 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-all"
                                                 >
                                                    <Zap size={18} />
-                                                   ⚡ Pick Next Player
+                                                    Pick Next Player
                                                 </button>
                                              )}
                                              
-                                             <div className="flex items-center gap-3">
-                                             <h2 className="text-4xl font-bold">{currentPlayer?.name}</h2>
-                                             {currentPlayer?.tier === 1 && <span className=" text-black px-2 py-1 rounded text-xs font-bold">👑</span>}
-                                             {currentPlayer?.tier === 2 && <span className=" text-black px-2 py-1 rounded text-xs font-bold">🔥</span>}
-                                             {currentPlayer?.tier === 3 && <span className=" text-black px-2 py-1 rounded text-xs font-bold">📈</span>}
-                                             </div>
+                                             <div className="flex flex-wrap items-center gap-2 min-w-0">
+                                             <h2 className="min-w-0 max-w-full text-2xl sm:text-3xl md:text-3xl xl:text-4xl font-bold leading-tight break-words">
+                                             {currentPlayer?.name}
+                                             </h2>
+                                       </div>
                                              </div>
                                           </div>
-                                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-white/[0.02] p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md">
+                                       <div className="grid grid-cols-2 gap-3 md:gap-4 bg-white/[0.02] p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/[0.04] backdrop-blur-md">
                                           <div className="text-center"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-xl font-bold text-gray-100">{currentPlayer.stats?.matches || 0}</span></div>
                                           {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-xl font-bold text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
                                           {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-xl font-bold text-gray-100">{currentPlayer.stats.sr}</span></div>)}
                                           {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-xl font-bold text-green-500">{currentPlayer.stats.wickets}</span></div>)}
                                        </div>
-                                       <div className="flex items-center justify-between mt-3 md:mt-4">
+                                       <div className="flex items-center justify-between gap-2 mt-2 sm:mt-3 md:mt-4">
                                           <div className="text-left">
                                              <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Current Bid</span>
                                              <div className="flex items-center gap-3">
-                                                <span className="text-2xl md:text-3xl font-extrabold text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
+                                                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
                                                 {displayAuctionState?.highBidderTeamId && (
                                                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
                                                       <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
@@ -1269,7 +1385,7 @@ const AuctionRoom = () => {
                                        </div>
                                     </div>
                                  </div>
-                                 <div className="bg-black/20 border-t border-white/5 p-4 md:p-6">
+                                 <div className="bg-black/20 border-t border-white/5 p-2 sm:p-4 md:p-6">
                                     {/* CUSTOM BID PANEL */}
                                     <AnimatePresence>
                                        {showCustomBid && displayAuctionState?.highBidderId !== user?.uid && (
@@ -1392,7 +1508,7 @@ const AuctionRoom = () => {
                                              displayAuctionState?.status !== 'bidding' ||
                                              displayAuctionState?.highBidderId === user?.uid
                                           }
-                                          className={`flex-1 h-14 md:h-18 font-black text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${
+                                          className={`flex-1 h-12 sm:h-14 md:h-[72px] font-black text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${
                                              displayAuctionState?.highBidderId === user?.uid
                                                 ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
                                                 : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
@@ -1415,7 +1531,7 @@ const AuctionRoom = () => {
                                                    setShowCustomBid((prev) => !prev);
                                                 }}
                                                 disabled={timeLeft === 0}
-                                                className={`w-14 md:w-20 h-14 md:h-18 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all active:scale-[0.96] ${
+                                                className={`w-14 md:w-20 h-12 sm:h-14 md:h-[72px] rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all active:scale-[0.96] ${
                                                    showCustomBid
                                                       ? 'bg-blue-500/20 border-blue-400 text-blue-300 shadow-[0_0_25px_rgba(59,130,246,0.2)]'
                                                       : 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-400 hover:text-blue-300'
@@ -1435,7 +1551,7 @@ const AuctionRoom = () => {
                                        {/* PLAYER LIST */}
                                        <button
                                           onClick={() => setShowPlayersOverlay(true)}
-                                          className="w-14 md:w-18 h-14 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+                                          className="w-14 md:w-18 h-12 sm:h-14 md:h-[72px] bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"
                                        >
                                           <List size={20} />
                                        </button>
