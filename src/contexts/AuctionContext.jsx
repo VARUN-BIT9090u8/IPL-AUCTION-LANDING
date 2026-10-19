@@ -62,7 +62,7 @@ export const AuctionProvider = ({ children }) => {
   const { user } = useAuth();
   const [currentAuction, setCurrentAuction] = useState(null);
   const [team, setTeam] = useState(null);
-  const [roomTeams, setRoomTeams] = useState([]);
+  const [roomTeams , setRoomTeams] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const endingPlayerRef = React.useRef(false);
@@ -205,6 +205,138 @@ export const AuctionProvider = ({ children }) => {
       timestamp: serverTimestampRtdb()
     });
   }, [getSyncedTime]);
+    // True only when every franchise that has a team record has reached the limit
+  const isEveryFranchiseFull = useCallback(async (roomId, squadLimit) => {
+    const snap = await get(ref(rtdb, `auctions/${roomId}/teams`));
+    if (!snap.exists()) return false;
+    const teams = Object.values(snap.val());
+    if (teams.length === 0) return false;
+    return teams.every(t => (t.squad?.length || 0) >= squadLimit);
+  }, []);
+
+  // Atomically claim completion so only one client finishes the auction
+  const claimAuctionCompletion = useCallback(async (roomId) => {
+    const statusRef = ref(rtdb, `auctions/${roomId}/room/status`);
+    const tx = await runTransactionRtdb(statusRef, (current) => {
+      if (current !== 'active') return; // abort: already completed
+      return 'completed';
+    });
+    if (!tx.committed) return false;
+
+    await updateDoc(doc(db, 'auctions', roomId), { status: 'completed' });
+    await push(ref(rtdb, `auctions/${roomId}/messages`), {
+      userId: 'system',
+      userName: 'System',
+      text: 'Auction COMPLETED: all franchises have filled their squads.',
+      type: 'log',
+      timestamp: serverTimestampRtdb()
+    });
+    return true;
+  }, []);
+    // Host-only. Validates squads, writes private hands, writes a public
+  // validation summary (no player IDs), then removes public squads.
+  const publishHandsAndHide = useCallback(async (roomId, squadLimit) => {
+    const teamsSnap = await get(ref(rtdb, `auctions/${roomId}/teams`));
+    if (!teamsSnap.exists()) return;
+
+    const teamsObj = teamsSnap.val();
+    const errors = [];
+    const ownerOf = new Map();
+    const hands = {};
+    const handSummary = {};
+
+    Object.entries(teamsObj).forEach(([key, t]) => {
+      const label = t.teamName || t.teamId || key;
+      const rawSquad = Array.isArray(t.squad) ? t.squad : [];
+      const cleanSquad = [];
+      const seenInTeam = new Set();
+
+      rawSquad.forEach((entry) => {
+        const pid = typeof entry === 'string' ? entry : entry?.id;
+        const bid = typeof entry === 'string' ? NaN : Number(entry?.bid);
+        if (!pid || seenInTeam.has(pid)) return;
+        seenInTeam.add(pid);
+
+        if (!IPL_PLAYERS.find((p) => p.id === pid)) {
+          errors.push(`${label}: unknown player ID ${pid}.`);
+          return;
+        }
+        if (ownerOf.has(pid)) {
+          errors.push(`${pid} is in both ${ownerOf.get(pid)} and ${label}.`);
+          return;
+        }
+        if (!Number.isFinite(bid) || bid < 0) {
+          errors.push(`${label}: invalid draft price for ${pid}.`);
+          return;
+        }
+        ownerOf.set(pid, label);
+        cleanSquad.push({ id: pid, bid });
+      });
+
+      if (cleanSquad.length !== squadLimit) {
+        errors.push(`${label}: has ${cleanSquad.length}/${squadLimit} valid players.`);
+      }
+
+      hands[t.userId] = {
+        teamId: t.teamId,
+        teamName: t.teamName || t.teamId,
+        squad: cleanSquad,
+      };
+      handSummary[t.userId] = {
+        teamId: t.teamId,
+        teamName: t.teamName || t.teamId,
+        count: cleanSquad.length,
+      };
+    });
+
+    const validation = { ok: errors.length === 0, errors, squadLimit };
+
+    // 1. Private hands
+    await Promise.all(
+      Object.entries(hands).map(([uid, hand]) =>
+        set(ref(rtdb, `auctions/${roomId}/hands/${uid}`), hand)
+      )
+    );
+        // 1b. Public squads (Option 1): readable by everyone after completion
+    await set(
+      ref(rtdb, `auctions/${roomId}/publicSquads`),
+      Object.fromEntries(
+        Object.entries(hands).map(([uid, h]) => [
+          uid,
+          { teamId: h.teamId, teamName: h.teamName, squad: h.squad },
+        ])
+      )
+    );
+
+    // 2. Public validation and counts only
+    await set(ref(rtdb, `auctions/${roomId}/validation`), validation);
+    await set(ref(rtdb, `auctions/${roomId}/handSummary`), handSummary);
+
+    // 3. Hide public squads (Realtime DB and Firestore)
+    await Promise.all(
+      Object.entries(teamsObj).map(([key, t]) => {
+        const count = Array.isArray(t.squad) ? t.squad.length : 0;
+        return Promise.all([
+          updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${key}`), {
+            squad: [],
+            squadCount: count,
+          }),
+          updateDoc(doc(db, 'teams', key), { squad: [], squadCount: count })
+            .catch(() => {}),
+        ]);
+      })
+    );
+  }, []);
+    // Publishes hands only once. Safe to call again.
+  const publishSquadsIfNeeded = useCallback(async (roomId, squadLimit) => {
+    const existing = await get(ref(rtdb, `auctions/${roomId}/validation`));
+    if (existing.exists()) return existing.val();
+
+    await publishHandsAndHide(roomId, squadLimit);
+
+    const after = await get(ref(rtdb, `auctions/${roomId}/validation`));
+    return after.exists() ? after.val() : null;
+  }, [publishHandsAndHide]);
 
   const endPlayerAuction = useCallback(async (roomId) => {
     // Prevent duplicate calls from the timer interval
@@ -287,6 +419,7 @@ export const AuctionProvider = ({ children }) => {
           playerOrder, 
           settings: data.settings,
           roomStatus: data.status,
+          squadLimit: data.squadLimit || (data.auctionType === 'sprint5' ? 5 : data.auctionType === 'sprint11' ? 11 : 25),
           players: nextData.players || data.players,
           teamDocId: isSold ? `${roomId}_${auctionState.highBidderId}` : null,
           newTeamData
@@ -323,7 +456,7 @@ export const AuctionProvider = ({ children }) => {
       const waitTime = result.isSold ? 5000 : 2000;
       
       // Use cached playerOrder & settings from the transaction — no extra getDoc!
-      setTimeout(async () => {
+            setTimeout(async () => {
         if (result.roomStatus !== 'active') return;
 
         const { playerOrder, settings } = result;
@@ -331,29 +464,33 @@ export const AuctionProvider = ({ children }) => {
         const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
         const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
         const nextIndexInOrder = order[currentPlayerIndexInOrder + 1];
-        
-        if (nextIndexInOrder !== undefined) {
-          const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
-          await set(liveRef, {
-            playerId: nextPlayer.id,
-            currentBid: 0,
-            highBidderId: '',
-            highBidderName: 'No Bids',
-            timerEndsAt: getSyncedTime() + (settings?.bidTimer || 10) * 1000,
-            status: 'bidding'
-          });
-        } else {
-          const roomRef2 = doc(db, 'auctions', roomId);
-          await updateDoc(roomRef2, { status: 'completed' });
-          await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
+
+        const allFull = await isEveryFranchiseFull(roomId, result.squadLimit);
+        const queueEmpty = nextIndexInOrder === undefined;
+
+        if (allFull || queueEmpty) {
+          await publishHandsAndHide(roomId, result.squadLimit);
+          await claimAuctionCompletion(roomId);
+          endingPlayerRef.current = false;
+          return;
         }
+
+        const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
+        await set(liveRef, {
+          playerId: nextPlayer.id,
+          currentBid: 0,
+          highBidderId: '',
+          highBidderName: 'No Bids',
+          timerEndsAt: getSyncedTime() + (settings?.bidTimer || 10) * 1000,
+          status: 'bidding'
+        });
         endingPlayerRef.current = false;
       }, waitTime);
     } catch (err) {
       // Error in endPlayerAuction
       endingPlayerRef.current = false;
     }
-  }, [getSyncedTime]);
+  },[getSyncedTime, isEveryFranchiseFull, claimAuctionCompletion,publishHandsAndHide]);
 
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails) => {
     const roomRef = doc(db, 'auctions', roomId);
@@ -459,6 +596,7 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   // Listen to current auction state live
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const joinAuction = useCallback((auctionId, userId) => {
     if (!userId) return () => {};
     
@@ -466,7 +604,6 @@ export const AuctionProvider = ({ children }) => {
     let auctionLoaded = false;
     let teamsLoaded = false;
     let messagesLoaded = false;
-
     const checkLoaded = () => {
       if (auctionLoaded && teamsLoaded && messagesLoaded) {
         setLoading(false);
@@ -530,6 +667,7 @@ export const AuctionProvider = ({ children }) => {
     });
 
     let didFallbackFetch = false;
+    let didTeamsFallback = false;
 
     const unsubAuction = onValue(ref(rtdb, `auctions/${auctionId}/room`), async (snapshot) => {
       if (snapshot.exists()) {
@@ -709,7 +847,7 @@ export const AuctionProvider = ({ children }) => {
     // SQUAD LIMIT
     // --------------------------------------------------
 
-    const squadLimit = currentAuction.squadLimit || 25;
+      const squadLimit = currentAuction.squadLimit || (currentAuction.auctionType === 'sprint5' ? 5 : currentAuction.auctionType === 'sprint11' ? 11 : 25);
 
     if (team.squad && team.squad.length >= squadLimit) {
       throw new Error(
@@ -949,12 +1087,14 @@ export const AuctionProvider = ({ children }) => {
     ]);
   }, [getSyncedTime, user, currentAuction]);
 
-  const endAuction = useCallback(async (roomId) => {
+    const endAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
 
+    // Publish private hands BEFORE marking the auction completed
+    await publishSquadsIfNeeded(roomId, currentAuction.squadLimit || 25);
+
     const roomRef = doc(db, 'auctions', roomId);
-    
-    // Fire all three writes in parallel
+
     await Promise.all([
       updateDoc(roomRef, { status: 'completed' }),
       updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' }),
@@ -966,8 +1106,16 @@ export const AuctionProvider = ({ children }) => {
         timestamp: serverTimestampRtdb()
       })
     ]);
-  }, [user, currentAuction]);
-
+  }, [user, currentAuction, publishSquadsIfNeeded]);
+    // One-time backfill for auctions completed before publicSquads existed.
+  // Copies the already-private hands into the public node. Host only.
+  const backfillPublicSquads = useCallback(async (roomId) => {
+    const snap = await get(ref(rtdb, `auctions/${roomId}/hands`));
+    if (!snap.exists()) return { ok: false, errors: ['No hands found for this auction.'] };
+    await set(ref(rtdb, `auctions/${roomId}/publicSquads`), snap.val());
+    return { ok: true };
+  }, []);
+  
   const value = {
     currentAuction,
     team,
@@ -987,7 +1135,8 @@ export const AuctionProvider = ({ children }) => {
     endAuction,
     sendMessage,
     messages,
-    getSyncedTime
+    getSyncedTime,
+    backfillPublicSquads
   };
 
   return (

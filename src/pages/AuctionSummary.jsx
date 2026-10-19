@@ -4,6 +4,8 @@ import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
+import { database } from '../lib/firebase';
+import { ref, onValue, set, serverTimestamp } from 'firebase/database';
 import {
   Trophy,
   Users,
@@ -21,11 +23,12 @@ import FantasyDashboard from '../components/fantasy/FantasyDashboard';
 const AuctionSummary = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentAuction, roomTeams, loading, joinAuction } = useAuction();
+  const { currentAuction, roomTeams, loading, joinAuction, backfillPublicSquads } = useAuction();
   const { user } = useAuth();
   
   const [activeTab, setActiveTab] = useState('squads');
   const [expandedTeam, setExpandedTeam] = useState(null);
+  const params = useParams();
 
 
   useEffect(() => {
@@ -34,30 +37,96 @@ const AuctionSummary = () => {
       return () => unsub();
     }
   }, [id, user?.uid, joinAuction]);
+    // Squads come from publicSquads (after completion).
+  // For auctions completed before publicSquads existed, fall back to hands.
+    const [squads, setSquads] = useState({});
 
+  useEffect(() => {
+    if (!id) return;
+    let unsubHands = null;
+
+    const unsubPublic = onValue(
+      ref(database, `auctions/${id}/publicSquads`),
+      (snap) => {
+        if (snap.exists()) {
+          setSquads(snap.val() || {});
+        } else if (!unsubHands) {
+          unsubHands = onValue(
+            ref(database, `auctions/${id}/hands`),
+            (hs) => setSquads(hs.val() || {}),
+            () => {}
+          );
+        }
+      },
+      () => {}
+    );
+
+    return () => {
+      unsubPublic();
+      if (unsubHands) unsubHands();
+    };
+  }, [id]);
+    // Franchise list straight from RTDB, independent of the auction context
+  const [rtdbTeams, setRtdbTeams] = useState([]);
+
+  useEffect(() => {
+    if (!id) return;
+    const unsub = onValue(
+      ref(database, `auctions/${id}/teams`),
+      (snap) => {
+        const val = snap.val() || {};
+        setRtdbTeams(Object.entries(val).map(([key, t]) => ({ id: key, ...t })));
+      },
+      () => {}
+    );
+    return () => unsub();
+  }, [id]);
+  const teamsForView = useMemo(
+    () =>
+      (rtdbTeams || []).map((rt) => ({
+        ...rt,
+        squad: squads?.[rt.userId]?.squad || [],
+      })),
+    [rtdbTeams, squads]
+  );
   // Derived Data
-  const allSoldPlayers = useMemo(() => {
-    return roomTeams.flatMap(rt => 
-      (rt.squad || []).map(s => {
+    const allSoldPlayers = useMemo(() => {
+    return (teamsForView || []).flatMap((rt) =>
+      (rt.squad || []).map((s) => {
         const pid = typeof s === 'string' ? s : s.id;
         const bidVal = typeof s === 'string' ? 0 : s.bid;
-        const teamInfo = TEAMS.find(t => t.id === rt.teamId);
-        const pInfo = IPL_PLAYERS.find(p => p.id === pid);
-        return { 
-          ...pInfo, 
-          bidVal, 
-          teamName: teamInfo?.name, 
-          teamId: rt.teamId, 
+        const teamInfo = TEAMS.find((t) => t.id === rt.teamId);
+        const pInfo = IPL_PLAYERS.find((p) => p.id === pid);
+        return {
+          ...pInfo,
+          bidVal,
+          teamName: teamInfo?.name,
+          teamId: rt.teamId,
           teamColor: teamInfo?.color,
-          teamTextColor: teamInfo?.textColor
+          teamTextColor: teamInfo?.textColor,
         };
       })
     ).sort((a, b) => b.bidVal - a.bidVal);
-  }, [roomTeams]);
+  }, [teamsForView]);
 
   const topPlayers = allSoldPlayers.slice(0, 5);
 
-
+    // When any franchise starts the card game, send every franchise to the game room.
+  // Only starts from the last 10 minutes count, so an old flag doesn't bounce people in.
+  useEffect(() => {
+    if (!id) return;
+    const unsub = onValue(
+      ref(database, `auctions/${id}/gameStart`),
+      (snap) => {
+        const v = snap.val();
+        if (v?.startedAt && Date.now() - v.startedAt < 10 * 60 * 1000) {
+          navigate(`/game-room/${id}`);
+        }
+      },
+      () => {}
+    );
+    return () => unsub();
+  }, [id, navigate]);
 
   if (loading || !currentAuction) {
     return (
@@ -205,7 +274,7 @@ const AuctionSummary = () => {
               <FantasyDashboard 
                 auctionId={id} 
                 user={user} 
-                roomTeams={roomTeams}
+                teamsForView={teamsForView}
                 currentAuction={currentAuction}
               />
             </motion.section>
@@ -218,7 +287,7 @@ const AuctionSummary = () => {
               className="max-w-5xl mx-auto space-y-4"
             >
               {TEAMS.map((t, idx) => {
-                const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
+                const teamDoc = teamsForView.find(doc => doc.teamId === t.id);
                 const manager = currentAuction?.players?.find(p => p.team === t.id);
                 const isExpanded = expandedTeam === t.id;
                 
@@ -367,7 +436,29 @@ const AuctionSummary = () => {
           <div className="flex items-center gap-4 text-gray-800 text-[10px] font-black uppercase tracking-[0.5em]">
             <History size={14} /> End of Session
           </div>
-          <button 
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            onClick={async () => {
+              try {
+                await set(ref(database, `auctions/${id}/gameStart`), {
+                  startedBy: user?.uid || '',
+                  startedByName: user?.displayName || 'Franchise',
+                  startedAt: serverTimestamp(),
+                });
+                navigate(`/game-room/${id}`);
+              } catch (e) {
+                alert('Could not start the game: ' + e.message);
+              }
+            }}
+            className="group relative px-16 py-6 bg-white hover:bg-yellow-300 text-black font-black uppercase text-sm tracking-[0.3em] rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.5)] active:scale-95 transition-all overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-yellow-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+            <div className="relative flex items-center justify-center gap-4 group-hover:text-white transition-colors">
+              🎮 Start Card Game
+            </div>
+          </motion.button>
+
+          <button
             onClick={() => navigate('/')}
             className="group relative px-16 py-6 bg-white text-black font-black uppercase text-sm tracking-[0.3em] rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.5)] active:scale-95 transition-all overflow-hidden"
           >

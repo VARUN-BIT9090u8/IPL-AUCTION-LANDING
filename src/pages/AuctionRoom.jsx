@@ -11,6 +11,9 @@ import { ref, update } from 'firebase/database';
 import { database } from '../lib/firebase';  
 import { db } from '../lib/firebase';
 import BudgetAlert from '../components/BudgetAlert';
+import { get } from 'firebase/database';
+import { rtdb } from '../lib/firebase';
+import { loadMyValidatedHand, SQUAD_LIMITS, INCOMPLETE_AUCTION_MESSAGE } from '../utils/cardBattleSquads';
 import {
   MoreVertical,
   ChevronDown,
@@ -101,6 +104,8 @@ const AuctionRoom = () => {
    const [banError, setBanError] = useState(null);
    const [showCustomBid, setShowCustomBid] = useState(false);
    const [customBid, setCustomBid] = useState(0);
+   const { publishSquadsIfNeeded } = useAuction();
+   const [publishing, setPublishing] = useState(false);
    const [showActionMenu, setShowActionMenu] = useState(false);
    // Clear optimistic state when DB catches up
    useEffect(() => {

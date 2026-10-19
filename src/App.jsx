@@ -8,7 +8,7 @@ import AuctionSummary from './pages/AuctionSummary'
 import './index.css'
 import Lobby from './pages/Lobby'
 import FantasyAdmin from './pages/FantasyAdmin'
-
+import GameRoom from './pages/GameRoom';
 
 function App() {
   return (
@@ -21,6 +21,7 @@ function App() {
                 <Route path="/lobby/:id" element={<Lobby />} />
                 <Route path="/auction/:id" element={<AuctionRoom />} />
                 <Route path="/summary/:id" element={<AuctionSummary />} />
+                <Route path="/game-room/:auctionId" element={<GameRoom />} />
                 <Route path="/admin/fantasy" element={<FantasyAdmin />} />
               </Routes>
             </div>
