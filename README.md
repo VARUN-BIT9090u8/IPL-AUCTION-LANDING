@@ -4,12 +4,11 @@
 
 # 🏏 IPL Auction Arena
 
-### Real-Time Multiplayer IPL Auction & Fantasy Platform
+### Real-Time Multiplayer IPL Auction & Card Battle Platform
 
 <p>
-A modern web-based IPL auction simulation platform that brings
-real-time multiplayer bidding, franchise management, live auction
-synchronization, and fantasy team management into one interactive experience.
+A web-based IPL auction simulation where friends draft their own franchises
+through live bidding, then settle the squads in a shared card battle.
 </p>
 
 <br>
@@ -39,26 +38,21 @@ synchronization, and fantasy team management into one interactive experience.
 - [Overview](#-overview)
 - [Project Objectives](#-project-objectives)
 - [Key Features](#-key-features)
-- [Auction System](#-auction-system)
-- [Custom Bidding](#-custom-bidding)
-- [Real-Time Synchronization](#-real-time-synchronization)
-- [Franchise Management](#-franchise-management)
 - [Auction Formats](#-auction-formats)
-- [Fantasy Arena](#-fantasy-arena)
-- [Admin Controls](#-admin-controls)
-- [Authentication](#-authentication)
-- [User Interface](#-user-interface)
+- [Auction Completion](#-auction-completion)
+- [Private Squad Review](#-private-squad-review)
+- [Card Battle](#-card-battle)
 - [Technology Stack](#-technology-stack)
 - [System Architecture](#-system-architecture)
-- [Auction Workflow](#-auction-workflow)
+- [Data Model](#-data-model)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
 - [Environment Variables](#-environment-variables)
-- [Production Build](#-production-build)
 - [Deployment](#-deployment)
-- [Security](#-security)
+- [Security Model](#-security-model)
+- [Testing](#-testing)
+- [Known Limitations](#-known-limitations)
 - [Future Enhancements](#-future-enhancements)
-- [Limitations](#-limitations)
 - [Project Information](#-project-information)
 - [License](#-license)
 
@@ -66,539 +60,299 @@ synchronization, and fantasy team management into one interactive experience.
 
 # 🎯 Overview
 
-**IPL Auction Arena** is a real-time multiplayer IPL auction simulation platform developed as a major project.
+**IPL Auction Arena** is a real-time multiplayer IPL auction simulation developed as a major project.
 
-The platform is designed to simulate the experience of an IPL-style player auction where multiple participants can manage their own franchise, compete for players, monitor their available budget, and build a squad through live bidding.
+Participants each take over an IPL franchise, bid for players in a live auction room, and once the auction completes, play a card battle using the squads they actually bought.
 
-The application combines:
+The platform combines:
 
-- Real-time multiplayer interaction
-- Auction-room management
-- Dynamic player bidding
-- Franchise budget management
-- Squad restrictions
-- Overseas-player restrictions
-- Synchronized auction timers
-- Live auction activity
-- Fantasy team management
-- Firebase-powered cloud synchronization
-- Modern sports-broadcast inspired UI
-
-The application is deployed using **Vercel** and uses **Firebase** for application services.
-
----
-
-# 🚀 Live Application
-
-## Live Demo
-
-### 👉 https://ipl-auction-landing.vercel.app/
-
-Open the deployed application:
-
-**[IPL Auction Arena — Live Demo](https://ipl-auction-landing.vercel.app/)**
-
-## Source Code
-
-### 👉 https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING
-
-**[View the GitHub Repository](https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING)**
+- Real-time bidding with synchronized state across connected users
+- Franchise budgets, squad limits, and overseas-player limits
+- Automatic auction completion when every franchise is full
+- A private squad review before each battle
+- A shared, turn-based card battle with hidden picks and timeouts
+- Rematches and "start together" navigation for everyone in the room
 
 ---
 
 # 🎓 Project Objectives
 
-The primary objective of this project is to develop an interactive real-time auction platform that demonstrates how distributed users can participate in the same auction environment while maintaining synchronized application state.
-
-### Main objectives
-
 - Build a real-time multiplayer auction environment.
-- Implement secure user authentication.
-- Allow users to participate through IPL franchises.
-- Implement real-time player bidding.
-- Maintain synchronized auction state between users.
-- Implement auction countdown timers.
-- Validate bids against available budgets.
-- Enforce squad-size restrictions.
-- Enforce overseas-player restrictions.
-- Provide auction administration controls.
-- Provide live activity monitoring.
-- Build a fantasy arena using acquired players.
-- Create a responsive and modern sports-oriented interface.
-- Deploy the application to a production environment.
+- Implement secure user authentication with Firebase.
+- Let users compete through IPL franchises.
+- Validate bids against budgets, squad limits, and overseas limits.
+- Keep auction state synchronized across clients.
+- Complete the auction automatically once every franchise is full.
+- Use only auction-acquired players in the card battle.
+- Keep each franchise's squad private during the review phase.
+- Run a shared, deterministic card battle with a single authoritative result per round.
+- Deploy the application to production.
 
 ---
 
 # ✨ Key Features
 
-## 🏏 1. Real-Time Auction Engine
+## 🏏 Real-Time Auction
+- Live player auctions with normal and custom bids
+- Highest-bidder tracking and synchronized countdown timers
+- SOLD / UNSOLD states and a live activity feed
+- Admin-controlled auction flow (start, pause, resume)
 
-The auction engine is the central component of the platform.
+## 🏢 Franchise Management
+- Each user owns one franchise for the room
+- Remaining purse, squad count, overseas count, and spend per franchise
+- Budget and squad limits enforced on every bid
 
-Players are introduced into the auction individually and participants compete through live bidding.
+## 🧩 Auction Validation
+- Bids rejected when the squad is full, the overseas quota is reached, or the budget is insufficient
+- Warning shown to a franchise that has reached its player limit
 
-### Features
+## 🏁 Auto-Completion
+- The auction ends when every participating franchise has its required number of players
+- Completion is claimed atomically so only one client finishes the auction
 
-- Live player auctions
-- Real-time bid updates
-- Highest bidder tracking
-- Auction countdown timer
-- SOLD / UNSOLD player states
-- Auction pause/resume
-- Admin-controlled auction flow
-- Live auction activity
-- Automatic budget updates
-- Squad validation
-- Overseas-player validation
+## 🔐 Authentication
+- Firebase Authentication for user identity
+- Users are tied to their franchise throughout the room
+
+## 🎨 Interface
+- Dark, sports-broadcast style with glassmorphism and Framer Motion animations
+- Responsive layouts for laptop and mobile
+- Player photos shown on laptop, hidden on mobile to keep the layout tight
 
 ---
 
-# 💰 2. Dynamic Bidding
+# 🏆 Auction Formats
 
-Participants can place bids while an auction is active.
+| Format | Players per franchise | Card battle size |
+|---|---|---|
+| Mega | 25 | 25 cards |
+| Sprint 11 | 11 | 11 cards |
+| Sprint 5 | 5 | 5 cards |
 
-The system validates each bid against the current auction state before accepting it.
+The format is chosen when the room is created. Squad size is controlled by the format; the battle format is chosen separately (see below).
 
-A valid bid updates:
+---
+
+# 🏁 Auction Completion
+
+The auction completes when **every participating franchise** holds its required number of players for the chosen format.
+
+- The host's browser checks after each sale and, if all franchises are full (or the player queue is empty), claims completion with a transaction on `room/status`.
+- Only one completion can succeed, so duplicate or concurrent checks cannot finish the auction twice.
+- After completion, each franchise's validated squad is written to a private node, and a public validation summary is written with no player IDs.
+
+> **Note:** completion runs in the host's browser. If the host closes the tab immediately after the final sale, completion will not run until the host reopens the room. A server-side function would remove this dependency.
+
+---
+
+# 🔒 Private Squad Review
+
+After completion, each franchise sees a **10-second review** of its own squad.
+
+- Each card shows name, role, nationality, matches, runs, wickets, strike rate, average, economy, and the **drafted price**.
+- The review reads only the signed-in franchise's own hand.
+- Other franchises' cards are never rendered on this screen.
+
+---
+
+# ⚔️ Card Battle
+
+After the review, the battle runs as a shared, turn-based game.
+
+## Format selection
+The host chooses one of:
+
+- **Play until cards run out** — the franchise with the most cards collected wins.
+- **Best of 5 rounds** — the battle ends after 5 rounds.
+- **Best of 10 rounds** — the battle ends after 10 rounds (or sooner if cards run out).
+
+## Round flow
+1. The turn holder picks one of their cards and a stat: RUNS, WICKETS, SR, AVG, or ECON.
+2. Every other active franchise sees the announced stat and locks in one of their own cards.
+3. Picks stay hidden until all franchises have locked in, or the submit timer runs out.
+4. All cards are revealed together and compared on the announced stat.
+5. Higher wins for RUNS, WICKETS, SR, and AVG. **Lower wins for ECON.**
+6. The round winner collects the cards played that round. Played cards leave each franchise's active hand.
+
+## Rules
+- A card can be played only once. Collected cards are not playable again.
+- **Timeouts:** a turn holder who doesn't pick within 20 seconds has their first active card auto-played with RUNS. A franchise that doesn't lock in within 20 seconds has its first active card auto-submitted.
+- **Ties:** when values are equal, the franchise closest to the turn holder in turn order wins. Every client computes the same winner.
+- **Duplicate actions** are rejected by the transaction, so rapid clicks or reconnects cannot play a card twice.
+
+## Rematch and start together
+- When a battle finishes, any franchise can start a **rematch** with the same squads and format.
+- When any franchise clicks **Start Card Game**, every franchise in the room is redirected to the battle automatically.
+
+---
+
+# 🛠️ Technology Stack
+
+## Frontend
+
+| Technology | Purpose |
+|---|---|
+| React 19 | Application UI |
+| Vite | Development and build tooling |
+| Tailwind CSS | Styling |
+| Framer Motion | Animations |
+| Lucide React | Icons |
+| React Router | Page routing |
+
+## Backend / Cloud
+
+| Technology | Purpose |
+|---|---|
+| Firebase Authentication | User identity |
+| Firebase Realtime Database | Live auction state, squads, battle state |
+| Cloud Firestore | Auction documents and team records |
+
+## Deployment
+
+| Technology | Purpose |
+|---|---|
+| Vercel | Production hosting |
+| GitHub | Source control |
+
+---
+
+# 🧠 System Architecture
 
 ```text
-Current Bid
-      ↓
-Highest Bidder
-      ↓
-Bid Timer
-      ↓
-Team Budget
-      ↓
-Live Auction State
-
-The updated state is then synchronized with other connected participants.
-
-🎯 3. Custom Bidding
-
-One of the major interactive features of the auction interface is the ability to support a custom bid amount.
-
-Instead of forcing a participant to repeatedly click the normal increment button, the participant can select a desired bid amount.
-
-Example
-Current Bid
-
-₹3.00 Cr
-
-
-Custom Bid
-
-₹10.00 Cr
-
-
-┌─────────────────────────┐
-│     PLACE CUSTOM BID    │
-└─────────────────────────┘
-
-This makes the auction interaction more realistic and allows participants to aggressively increase their bid when competing for a priority player.
-
-Before a custom bid is accepted, the system can validate the bid against the auction's current state and the participating team's available budget.
-
-⚡ 4. Real-Time Synchronization
-
-The platform uses Firebase Realtime Database to synchronize auction state between connected clients.
-
-The auction state can include information such as:
-
-Current player
-Current bid
-Highest bidder
-Highest bidder team
-Auction status
-Timer state
-Player status
-Participant information
-
-This allows multiple users to participate in the same auction room without manually refreshing the page.
-
-⏱️ 5. Synchronized Auction Timer
-
-Auction timers are synchronized using server-time information rather than relying entirely on the local clock of each user's computer.
-
-This helps prevent different clients from displaying substantially different auction countdowns.
-
-When a valid bid is placed, the auction timer can be reset according to the configured bid timer.
-
-🏢 6. Franchise Management
-
-Each participant manages an IPL franchise during the auction.
-
-The franchise interface provides information such as:
-
-Remaining purse
-Players purchased
-Squad size
-Overseas players
-Player categories
-Spending
-Available squad slots
-
-Example:
-
-TEAM
-Mumbai Indians
-
-PURSE
-₹118 Cr
-
-SQUAD
-1 / 25
-
-OVERSEAS
-0 / 8
-
-SPENT
-₹2 Cr
-🧩 7. Squad Validation
-
-The auction engine validates squad constraints before allowing additional players to be purchased.
-
-Squad limit
-
-A team cannot exceed its configured squad limit.
-
-Overseas limit
-
-A team cannot exceed its configured overseas-player quota.
-
-Budget limit
-
-A team cannot place a bid that exceeds its available budget.
-
-These validations prevent invalid auction states.
-
-🏆 8. Auction Formats
-
-The platform supports configurable auction formats.
-
-Format	Squad Limit	Overseas Limit	Budget
-Mega	25	8	₹120 Cr
-Sprint 11	11	4	₹90 Cr
-Sprint 5	5	2	₹60 Cr
-
-These values are used by the auction system to determine team constraints.
-
-👥 9. Multiplayer Lobby
-
-Before entering the auction, participants can join an auction room.
-
-The lobby provides functionality around:
-
-Auction-room participation
-Team/franchise selection
-Participant management
-Auction configuration
-Pre-auction coordination
-Live chat
-Admin controls
-
-Participants can then transition from the lobby into the live auction room.
-
-💬 10. Live Auction Activity
-
-The auction interface includes an activity area for important auction events.
-
-Examples include:
-
-Auction resumed by Admin
-
-Player sold to Mumbai Indians
-
-Player went unsold
-
-New highest bidder
-
-Auction paused by Admin
-
-This provides participants with a chronological view of important auction events.
-
-👨‍💼 11. Admin Controls
-
-Administrators can control the auction environment.
-
-Depending on the configured auction mode, administrative functionality includes:
-
-Starting an auction
-Pausing an auction
-Resuming an auction
-Managing participants
-Removing participants
-Managing player flow
-Monitoring auction activity
-Managing auction configuration
-
-The administrator controls the state of the auction while participants interact with the bidding interface.
-
-🏏 12. Fantasy Arena
-
-The project also provides a Fantasy Arena concept built around players acquired during the auction.
-
-Participants can use their auction acquisitions to construct fantasy teams.
-
-Fantasy functionality includes concepts such as:
-
-Playing XI selection
-Captain selection
-Vice-Captain selection
-Impact Player selection
-Fantasy scoring
-Leaderboard-based ranking
-📊 13. Fantasy Scoring
-
-The Fantasy Arena is designed to convert player performance data into fantasy points.
-
-Supported performance categories can include:
-
-Runs
-Wickets
-Catches
-Strike rate
-Other supported match statistics
-
-Captain and Vice-Captain selections can receive higher scoring multipliers.
-
-Player Role	Multiplier
-Regular Player	1×
-Vice-Captain	1.5×
-Captain	2×
-🔐 14. Authentication
-
-The application uses Firebase Authentication for user authentication.
-
-Authentication allows the application to associate:
-
-User
- ↓
-Auction Room
- ↓
-Franchise
- ↓
-Bids
- ↓
-Squad
-
-This provides a user-specific identity throughout the auction experience.
-
-🎨 User Interface
-
-The interface is designed around a modern sports-broadcast aesthetic.
-
-UI characteristics
-Dark theme
-Blue-focused visual system
-Glassmorphism
-Responsive layouts
-Animated transitions
-Live status indicators
-Player cards
-Auction countdown
-Team dashboards
-Activity panels
-Interactive controls
-Framer Motion animations
-
-The interface is intentionally designed to feel closer to a live sports platform than a conventional college CRUD application.
-
-🧠 System Architecture
-
-The high-level architecture can be represented as:
-
-                         ┌─────────────────────┐
-                         │      Vercel         │
-                         │   React Frontend    │
-                         └──────────┬──────────┘
-                                    │
-                                    │
-                         ┌──────────▼──────────┐
-                         │   Firebase Auth     │
-                         │ Authentication      │
-                         └──────────┬──────────┘
-                                    │
-                                    │
-                    ┌───────────────▼───────────────┐
-                    │                               │
-          ┌─────────▼─────────┐         ┌──────────▼─────────┐
-          │   Firestore       │         │ Firebase RTDB      │
-          │                   │         │                    │
-          │ Persistent Data   │         │ Real-Time Auction  │
-          │                   │         │ Synchronization    │
-          └───────────────────┘         └──────────┬─────────┘
-                                                   │
-                                                   │
-                                    ┌──────────────▼──────────────┐
-                                    │       Connected Users       │
-                                    │                             │
-                                    │  User 1   User 2   User 3  │
-                                    └─────────────────────────────┘
-🔄 Auction Workflow
-┌────────────────────┐
-│    Landing Page    │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│ Authentication     │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│ Create / Join Room │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│       Lobby        │
-│                    │
-│ Team Selection     │
-│ Participants       │
-│ Configuration      │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│    Auction Room    │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│    Player Listed   │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│      Bidding       │
-│                    │
-│ Normal Bid         │
-│ Custom Bid         │
-│ Timer              │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│    SOLD / UNSOLD   │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│    Squad Update    │
-│    Budget Update   │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│  Next Player       │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│  Auction Summary   │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│   Fantasy Arena    │
-└────────────────────┘
-🛠️ Technology Stack
-Frontend
-Technology	Purpose
-React	Frontend application
-Vite	Development/build tooling
-Tailwind CSS	Styling
-Framer Motion	Animations
-Lucide React	UI icons
-Backend / Cloud
-Technology	Purpose
-Firebase Authentication	User authentication
-Firebase Realtime Database	Real-time auction synchronization
-Cloud Firestore	Persistent application data
-Deployment
-Technology	Purpose
-Vercel	Production deployment
-GitHub	Source-code repository
-📂 Project Structure
+                    ┌─────────────────────┐
+                    │   Vercel (React)    │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  Firebase Auth      │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┴────────────────┐
+              │                                 │
+   ┌──────────▼──────────┐          ┌───────────▼──────────┐
+   │ Firestore           │          │ Realtime Database    │
+   │ auction documents   │          │ live bidding, squads │
+   │ team records        │          │ battle state, rules  │
+   └─────────────────────┘          └───────────┬──────────┘
+                                                │
+                                   ┌────────────▼────────────┐
+                                   │ Connected franchises    │
+                                   │ (each user, own tab)    │
+                                   └─────────────────────────┘
+```
+
+---
+
+# 🗂️ Data Model
+
+Realtime Database, per auction:
+
+```text
+auctions/{auctionId}/
+├── room/                 status, auctionType, squadLimit, hostId, players
+├── live/                 current player, bid, highest bidder, timer
+├── playerOrder/          queue of player indices
+├── teams/{team}/         public team record (squad cleared after completion)
+├── hands/{uid}/          private squad, readable only by its owner
+├── publicSquads/         squads shown after completion
+├── validation/           ok flag and errors, no player IDs
+├── handSummary/          per-franchise counts
+├── battle/               shared card battle state
+├── gameStart/            start-together flag
+├── messages/             activity feed
+└── presence/             online status
+```
+
+---
+
+# 📂 Project Structure
+
+```text
 IPL-AUCTION-LANDING/
-│
 ├── public/
-│   ├── images/
 │   └── readme-assets/
-│
 ├── scripts/
-│   ├── autoUpdateFantasy.js
-│   ├── backfillIPL2026.js
-│   ├── deployDatabaseRules.js
-│   └── uploadConsolidatedPoints.js
-│
 ├── src/
-│   │
 │   ├── components/
+│   │   ├── GameCard.jsx          responsive player card (battle + review)
 │   │   └── fantasy/
-│   │
 │   ├── contexts/
-│   │
+│   │   ├── AuthContext.jsx
+│   │   └── AuctionContext.jsx    auction state, completion, hands
 │   ├── data/
-│   │
+│   │   └── players.js            player dataset
 │   ├── lib/
-│   │
+│   │   └── firebase.js
 │   ├── pages/
+│   │   ├── LandingPage.jsx
+│   │   ├── Lobby.jsx
 │   │   ├── AuctionRoom.jsx
 │   │   ├── AuctionSummary.jsx
-│   │   ├── FantasyAdmin.jsx
-│   │   ├── LandingPage.jsx
-│   │   └── Lobby.jsx
-│   │
+│   │   ├── GameRoom.jsx          private review + shared battle
+│   │   └── FantasyAdmin.jsx
+│   ├── utils/
+│   │   ├── cardBattleSquads.js   squad validation for the battle
+│   │   └── cardBattle.js         battle rules and transactions
 │   ├── App.jsx
-│   ├── main.jsx
-│   └── index.css
-│
+│   └── main.jsx
 ├── database.rules.json
 ├── firebase.json
-├── index.html
 ├── package.json
-├── package-lock.json
 ├── vite.config.js
 ├── .env.example
-├── .gitignore
 └── README.md
-🚀 Getting Started
-Prerequisites
+```
 
-Make sure you have the following installed:
+---
 
-Node.js 18 or later
-npm
-Git
-A Firebase project
-1. Clone the Repository
+# 🚀 Getting Started
+
+## Prerequisites
+- Node.js 18 or later
+- npm
+- Git
+- A Firebase project with Authentication, Realtime Database, and Firestore enabled
+
+## 1. Clone the repository
+
+```bash
 git clone https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING.git
-
-Move into the project:
-
 cd IPL-AUCTION-LANDING
-2. Install Dependencies
+```
+
+## 2. Install dependencies
+
+```bash
 npm install
-3. Configure Firebase
+```
 
-Create a Firebase project and configure:
+## 3. Configure environment variables
 
-Firebase Authentication
-Cloud Firestore
-Firebase Realtime Database
+Copy `.env.example` to `.env` and fill in your Firebase values (see below).
 
-Then create a local .env file.
+## 4. Run the development server
 
-🔐 Environment Variables
+```bash
+npm run dev
+```
 
-Create:
+Open `http://localhost:5173`.
 
-.env
+## 5. Build for production
 
-Example:
+```bash
+npm run build
+npm run preview
+```
 
+---
+
+# 🔐 Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_DATABASE_URL=your_database_url
@@ -609,281 +363,115 @@ VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
 VITE_ADMIN_EMAIL=your_admin_email
-VITE_CRICKET_API_KEY=your_cricket_api_key
-⚠️ Security Warning
+```
 
-Never commit the real .env file to GitHub.
+> **Never commit the real `.env` file.** Keep `.env` in `.gitignore` and commit only `.env.example`.
 
-The repository should contain:
+---
 
-.env.example
+# 🌐 Deployment
 
-instead of:
+The production build is hosted on **Vercel** and deploys from the GitHub repository.
 
-.env
+```text
+Local development → git push → GitHub → Vercel build → production
+```
 
-The .env file should be included in .gitignore.
+Live: https://ipl-auction-landing.vercel.app/
 
-▶️ Run the Project Locally
+---
 
-Start the development server:
+# 🔒 Security Model
 
-npm run dev
+The database rules restrict what each user can read and write:
 
-Vite will provide a local development URL, normally:
+- **Private squads:** `hands/{uid}` is readable only by its owner and writable only by the host.
+- **Public squads and validation:** readable by signed-in users, writable only by the host.
+- **Live auction state:** readable and writable by signed-in users, so bidding works in real time.
+- **Presence:** each user can write only their own presence entry.
 
-http://localhost:5173
-🏗️ Production Build
+### Known limitations of the current rules
+- **Team records (`teams`) are writable by any signed-in user.** The app's budget and squad checks run in the browser, so a determined user could edit a team's budget or squad. Fixing this requires server-side validation (Cloud Functions), which is not implemented.
+- **Bid validation is client-side.** The rules do not check bid amounts, budgets, or squad limits.
+- **Completion and battle resolution depend on a connected client.** Transactions prevent duplicate results, but a fully offline room cannot progress.
 
-Build the application:
+This project is built for a trusted group of friends. Do not use it for real money or with untrusted users without adding server-side validation.
 
-npm run build
+---
 
-Preview the production build:
+# 🧪 Testing
 
-npm run preview
-🚀 Deployment
+Manual checks used during development:
 
-The production application is deployed using Vercel.
+**Auction**
+- Create and join a room; the lobby lists participants.
+- Normal and custom bids update the highest bidder and timer.
+- Bids are rejected when the squad is full, the overseas quota is reached, or the budget is insufficient.
+- The auction completes automatically when every franchise is full.
 
-Production URL
-https://ipl-auction-landing.vercel.app/
-Deployment workflow
-Local Development
-       │
-       ▼
-    Git Commit
-       │
-       ▼
-    Git Push
-       │
-       ▼
-     GitHub
-       │
-       ▼
-     Vercel
-       │
-       ▼
- Production Application
+**Review and battle**
+- Each franchise sees only its own squad during the 10-second review.
+- The host chooses the format; the other franchises wait.
+- Picks stay hidden until reveal; the round result matches on every client.
+- Timeouts resolve the round; ties resolve the same way on every client.
+- Refreshing during a battle restores the same state.
+- Rematch and "Start Card Game" redirect the room.
 
-Vercel automatically builds and deploys the project from the connected GitHub repository.
+---
 
-🔒 Security Considerations
+# ⚠️ Known Limitations
 
-The application uses Firebase services and therefore requires appropriate Firebase security rules.
+- Auction completion runs in the host's browser.
+- Team budgets and squads are not server-validated.
+- The player dataset is static; stats must be updated manually.
+- The project is an auction simulation and is not an official IPL product.
 
-Important security practices include:
+---
 
-Never expose private API keys unnecessarily.
-Never commit .env files.
-Use Firebase Authentication for user identity.
-Configure Firestore security rules.
-Configure Realtime Database security rules.
-Validate auction operations.
-Validate user permissions.
-Validate team budgets.
-Validate squad limits.
-Validate overseas-player limits.
+# 🔮 Future Enhancements
 
-Client-side validation should not be considered a complete security boundary. Sensitive authorization decisions should be enforced by backend/database security rules where applicable.
+- Cloud Functions for server-side bid, budget, and completion validation
+- Automatic completion that does not depend on the host's browser
+- Richer battle modes and power cards
+- Improved mobile layouts for the auction room
 
-📊 Auction Data Validation
+These are planned and are not implemented yet.
 
-Before accepting a bid, the application checks relevant auction conditions.
+---
 
-Conceptually:
+# 👨‍💻 Project Information
 
-Is auction active?
-       │
-       ├── NO → Reject bid
-       │
-       ▼
-Is user authenticated?
-       │
-       ├── NO → Reject bid
-       │
-       ▼
-Does user have a franchise?
-       │
-       ├── NO → Reject bid
-       │
-       ▼
-Is user already highest bidder?
-       │
-       ├── YES → Reject bid
-       │
-       ▼
-Squad limit available?
-       │
-       ├── NO → Reject bid
-       │
-       ▼
-Overseas quota available?
-       │
-       ├── NO → Reject bid
-       │
-       ▼
-Sufficient budget?
-       │
-       ├── NO → Reject bid
-       │
-       ▼
-      VALID
-       │
-       ▼
-Update auction state
-🧪 Testing
+| Category | Details |
+|---|---|
+| Project Name | IPL Auction Arena |
+| Project Type | Major Project |
+| Application Type | Real-time multiplayer web application |
+| Frontend | React 19 + Vite |
+| Styling | Tailwind CSS |
+| Animation | Framer Motion |
+| Authentication | Firebase Authentication |
+| Database | Firebase Realtime Database + Cloud Firestore |
+| Deployment | Vercel |
+| Source Control | GitHub |
 
-Before deploying changes, verify the following:
+---
 
-Authentication
- User can register/login.
- User can logout.
- Invalid authentication is handled.
-Lobby
- Room can be created.
- Room can be joined.
- Participants are displayed.
- Teams can be selected.
-Auction
- Auction can start.
- Player is displayed.
- Current bid is visible.
- Normal bid works.
- Custom bid works.
- Highest bidder updates.
- Timer updates.
- Timer resets after valid bidding.
- SOLD state works.
- UNSOLD state works.
- Pause works.
- Resume works.
-Team Management
- Budget decreases after purchase.
- Squad count increases.
- Squad limit is enforced.
- Overseas limit is enforced.
-Deployment
- Production build succeeds.
- Firebase environment variables are configured.
- Production authentication works.
- Production database access works.
-🔮 Future Enhancements
-
-Possible future improvements include:
-
-🤖 AI-based player valuation
-📈 Advanced auction analytics
-🧠 AI-powered squad recommendations
-📊 Player performance prediction
-🎙️ Real-time voice communication
-🏆 Tournament-based auction modes
-📱 Improved mobile-first experience
-📉 Advanced spending analytics
-🧮 Advanced fantasy scoring models
-🛡️ Stronger server-side auction validation
-📡 More live cricket-data integrations
-
-These are planned enhancement areas and should not be interpreted as currently implemented functionality.
-
-⚠️ Limitations
-
-The project is an auction simulation platform and is not an official IPL application.
-
-The system should not be interpreted as an official IPL auction service, official IPL fantasy product, or official IPL data platform.
-
-External cricket statistics and player information may depend on the availability and accuracy of the configured data source.
-
-📚 Learning Outcomes
-
-This project provides practical experience with:
-
-React application architecture
-Component-based UI development
-Vite build tooling
-Tailwind CSS
-Framer Motion
-Firebase Authentication
-Firebase Realtime Database
-Cloud Firestore
-Real-time state synchronization
-Multiplayer application design
-Auction algorithms
-State validation
-Authentication flows
-Responsive UI design
-Git/GitHub workflows
-Vercel deployment
-👨‍💻 Project Information
-Category	Details
-Project Name	IPL Auction Arena
-Project Type	Major Project
-Application Type	Real-Time Multiplayer Web Application
-Domain	Cricket / Sports Technology
-Frontend	React + Vite
-Styling	Tailwind CSS
-Animation	Framer Motion
-Authentication	Firebase Authentication
-Database	Firebase Firestore + Realtime Database
-Deployment	Vercel
-Source Control	GitHub
-🌐 Project Links
-🚀 Live Application
-
-https://ipl-auction-landing.vercel.app/
-
-💻 GitHub Repository
-
-https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING
-
-🤝 Contributing
-
-Contributions, bug reports, and feature suggestions are welcome.
-
-To contribute:
-
-git clone https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING.git
-cd IPL-AUCTION-LANDING
-npm install
-
-Create a feature branch:
-
-git checkout -b feature/your-feature
-
-Commit your changes:
-
-git add .
-git commit -m "Add your feature"
-
-Push the branch:
-
-git push origin feature/your-feature
-
-Then open a Pull Request on GitHub.
-
-📝 License
+# 📝 License
 
 This project is developed as an academic/major project.
 
-The project is not affiliated with, endorsed by, or officially connected to the Board of Control for Cricket in India (BCCI), Indian Premier League (IPL), or any IPL franchise.
+It is not affiliated with, endorsed by, or connected to the Board of Control for Cricket in India (BCCI), the Indian Premier League (IPL), or any IPL franchise. Team names, logos, and player information belong to their respective owners.
 
-Use of third-party names, logos, player information, and other assets should comply with their respective rights and licenses.
+---
 
 <div align="center">
-🏏 IPL Auction Arena
-Build Your Squad. Manage Your Purse. Win The Auction.
-<br>
 
-Live Demo:
-https://ipl-auction-landing.vercel.app/
+🏏 **IPL Auction Arena**
+*Build your squad. Manage your purse. Battle for the trophy.*
 
-<br>
-
-Source Code:
-https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING
-
-<br><br>
+Live Demo: https://ipl-auction-landing.vercel.app/
+Source Code: https://github.com/VARUN-BIT9090u8/IPL-AUCTION-LANDING
 
 ⭐ If you find the project interesting, consider starring the repository.
 
-</div> ```
+</div>
