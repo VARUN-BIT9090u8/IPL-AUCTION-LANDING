@@ -25,7 +25,7 @@ import {
 const REVIEW_SECONDS = 10;
 
 const Shell = ({ children }) => (
-  <div className="min-h-screen bg-[#050505] text-white font-sans p-4 sm:p-6 relative overflow-hidden">
+  <div className="min-h-screen bg-[#050505] text-white font-sans p-4 sm:p-6 relative overflow-x-clip">
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
       <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-blue-600/20 blur-[150px] rounded-full" />
       <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[150px] rounded-full" />
@@ -87,6 +87,7 @@ const GameRoom = () => {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [showPlayerStatus, setShowPlayerStatus] = useState(false);
 
   const offsetRef = useRef(0);
   const battleRef = useRef(undefined);
@@ -351,7 +352,7 @@ const GameRoom = () => {
             disabled={busy}
             className="bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50 text-black px-8 py-3 rounded-lg font-black"
           >
-            Rematch (same rules)
+            Rematch (IF U DARE)
           </button>
           <div>
             <button onClick={() => navigate('/')} className="bg-blue-500 text-white px-8 py-3 rounded-lg font-bold">
@@ -375,7 +376,79 @@ const GameRoom = () => {
   const last = battle.lastRound;
 
   return (
-    <Shell>
+    <Shell>      
+      {/* COMPACT MOBILE BATTLE OVERLAY */}
+      {battle.phase === 'submit' && (
+        <div className="md:hidden fixed bottom-2 left-2 right-2 z-[100]">
+          <div className="bg-[#111827]/95 backdrop-blur-xl border border-yellow-500/50 rounded-xl shadow-2xl">
+
+            {/* Always-visible compact bar */}
+            <button
+              onClick={() => setShowPlayerStatus((v) => !v)}
+              className="w-full p-3 flex items-center justify-between gap-2 text-left"
+            >
+              <div>
+                <p className="text-[9px] text-gray-400 uppercase">
+                  {battle.names?.[battle.turnUid] || 'Opponent'} selected
+                </p>
+                <p className="text-yellow-400 font-black text-lg leading-tight">
+                  {battle.stat}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-green-400 font-bold">
+                  {lockedCount}/{playingCount} LOCKED
+                </span>
+                <span className="text-white text-lg">
+                  {showPlayerStatus ? '⌄' : '⌃'}
+                </span>
+              </div>
+            </button>
+
+            {/* Small player indicators */}
+            <div className="px-3 pb-2 flex gap-1">
+              {toArray(battle.turnOrder)
+                .filter((u) => activeCountOf(battle, u) > 0)
+                .map((u) => (
+                  <div
+                    key={u}
+                    title={battle.names?.[u]}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      battle.submissions?.[u]
+                        ? 'bg-green-400'
+                        : 'bg-gray-600'
+                    }`}
+                  />
+                ))}
+            </div>
+
+            {/* Expand only when requested */}
+            {showPlayerStatus && (
+              <div className="border-t border-white/10 p-3 space-y-2 max-h-32 overflow-y-auto">
+                {toArray(battle.turnOrder)
+                  .filter((u) => activeCountOf(battle, u) > 0)
+                  .map((u) => (
+                    <div key={u} className="flex justify-between items-center gap-2">
+                      <span className="text-white text-xs truncate">
+                        {u === uid ? 'You' : battle.names?.[u] || 'Opponent'}
+                      </span>
+
+                      <span className={`text-[10px] font-bold ${
+                        battle.submissions?.[u]
+                          ? 'text-green-400'
+                          : 'text-yellow-400'
+                      }`}>
+                        {battle.submissions?.[u] ? '✓ LOCKED' : 'WAITING'}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="text-center mb-6">
         <h1 className="text-3xl sm:text-4xl font-black text-white">⚡ Card Battle</h1>
         <p className="text-gray-400 mt-1">
@@ -442,7 +515,7 @@ const GameRoom = () => {
       )}
 
       {/* Your actions */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-6">
+      <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-6 pb-24 md:pb-6">
                 {isMyTurn && (
           <>
             <p className="text-white font-bold mb-3">
